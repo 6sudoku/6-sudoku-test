@@ -48,3 +48,9 @@
 
 /* Esclusivo ambiente di prova: segnalazione ben visibile. */
 .test-banner{background:#fff1cd;color:#583d06;border:1px solid #e3c578;border-radius:10px;margin:8px auto 12px;padding:9px 12px;font-size:12px;font-weight:700;text-align:center;line-height:1.5;}
+
+/* Optional verified email profile recovery */
+.profile-recovery{margin-top:15px;padding-top:13px;border-top:1px solid #d9e4d9}
+.profile-section .btn.secondary{width:100%;margin-top:8px}
+.profile-section input[type=email]{width:100%}
+#emailProtectionStatus{min-height:1.2em;overflow-wrap:anywhere}
