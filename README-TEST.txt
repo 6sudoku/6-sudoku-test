@@ -1,21 +1,20 @@
-6 SUDOKU v0.12.5 - AMBIENTE DI PROVA
+6 SUDOKU v0.12.6 TEST — Collegamento email e recupero profilo
 
-URL: https://6sudoku.github.io/6-sudoku-test/
-Caricare il CONTENUTO di questa cartella nella radice del repository 6-sudoku-test; non caricare la cartella esterna.
+Sito: https://6sudoku.github.io/6-sudoku-test/
 
-ISOLAMENTO:
-- Service Worker limitato alla sottocartella /6-sudoku-test/, per via della posizione del file.
-- Cache denominata 6-sudoku-test-v0125-1; la pulizia riguarda soltanto cache 6-sudoku-test-*.
-- localStorage delle partite, lingua, nickname, notifiche con prefisso 6sudoku-test-.
-- Sessione Supabase JS con storageKey 6sudoku-test-supabase-auth.
-- Manifest e nome installazione 6 Sudoku TEST per distinguere le due icone.
+PASSAGGI PRIMA DEL TEST
+1. Supabase Authentication > Sign In / Providers > Allow manual linking: ON, Save.
+2. Supabase Authentication > URL Configuration: Site URL https://6sudoku.github.io/6-sudoku-test/ ; Redirect URLs include https://6sudoku.github.io/6-sudoku-test/** .
+3. SMTP Gmail già configurato e verificato. Turnstile attivo e site key presente nel file pubblico js/supabase-config.js.
+4. Caricare il contenuto dello ZIP nella RADICE del repository 6-sudoku-test, sovrascrivendo i file della precedente versione TEST.
+5. Attendere aggiornamento Service Worker, ricaricare e verificare la scritta v0.12.6.
 
-ATTENZIONE: LA CONNESSIONE SUPABASE NON E' ISOLATA. La versione TEST usa il progetto Supabase configurato, quindi creare un profilo di prova significa registrarlo DAVVERO sullo stesso backend. Usare nickname di prova riconoscibili; non utilizzare credenziali segrete nel repository.
+TEST EMAIL
+Aprire Classifica mondiale > Profilo. Con il giocatore già registrato, inserire l'email facoltativa e premere Invia link di verifica.
+Aprire il link ricevuto dalla STESSA app/browser in cui si vuole confermare l'indirizzo. Rientrare nel Profilo e verificare lo stato email.
+Per il recupero su altro dispositivo, aprire il profilo, inserire l'email nel campo Recupera profilo, ricevere link di accesso e aprirlo sul nuovo dispositivo. Verificare che l'ID del giocatore coincida in Supabase.
+Usare un'email di prova non collegata ad altri utenti Supabase e NON la email usata per il test Invite user in Authentication (se ha creato un altro account).
 
-Il CAPTCHA di Supabase deve restare DISATTIVATO finche' il flusso Turnstile non viene testato. Il codice puo' comunque mostrare la verifica Cloudflare al primo accesso se e' configurata la site key.
+NOTA: la registrazione rimane senza email obbligatoria; non sono ancora attivi push, classifiche online o sincronizzazione dei risultati locali. Non cancellare la PWA ufficiale o i suoi dati. Il progetto TEST usa lo stesso database Supabase del sito futuro.
 
-Verifica: apri /6-sudoku-test/, vai al profilo, salva nickname e Paese, poi verifica Supabase > Authentication > Users e Table Editor > profiles / profile_settings.
-
-NOTA: v0.12.5 non ha ancora classifiche vere, email di recupero né push; le sfide quotidiane restano locali.
-
-Se il browser mostra una versione vecchia, chiudi il sito TEST e riaprilo. Non cancellare i dati dell'app ufficiale.
+SICUREZZA: mai mettere Gmail app password, Supabase secret/service_role o Cloudflare secret key nel repository.
