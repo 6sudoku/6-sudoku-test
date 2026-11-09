@@ -45,5 +45,48 @@
   if(r2.error)throw r2.error;
   return {userId:uid};
  }
- window.SudokuOnline={configured,get connected(){return !!client},restore,saveProfile};
+
+ // Le email appartengono SOLO a Supabase Auth, mai alla tabella pubblica profiles.
+ // L'associazione preserva l'ID esistente. I link di conferma sono inviati da SMTP.
+ async function accountState(){
+  if(!configured||!navigator.onLine)return {configured,offline:!navigator.onLine};
+  const db=await getClient();const {data,error}=await db.auth.getUser();
+  if(error&&!(/Auth session missing/i).test(error.message||''))throw error;
+  const user=data?.user||null;
+  return {configured,userId:user?.id||null,email:user?.email||null,verified:!!user?.email_confirmed_at,isAnonymous:!!user?.is_anonymous};
+ }
+ function callbackUrl(){return new URL('./',window.location.href).href;}
+ async function linkEmail(email){
+  const db=await getClient();const {data:{user},error:userError}=await db.auth.getUser();
+  if(userError||!user)throw userError||Error('No logged-in user');
+  if(user.email_confirmed_at&&user.email?.toLowerCase()===email.toLowerCase())return {already:true,userId:user.id};
+  const {error}=await db.auth.updateUser({email},{emailRedirectTo:callbackUrl()});
+  if(error)throw error;
+  return {sent:true,userId:user.id};
+ }
+ async function sendRecovery(email){
+  if(!navigator.onLine)throw Error('Offline');const db=await getClient();
+  // Un link di recupero non deve mai creare un nuovo account Supabase.
+  const captchaToken=await obtainCaptcha();
+  const options={shouldCreateUser:false,emailRedirectTo:callbackUrl()};
+  if(captchaToken)options.captchaToken=captchaToken;
+  const {error}=await db.auth.signInWithOtp({email,options});if(error)throw error;
+  return {sent:true};
+ }
+ // Recupera il profilo sulla base dell'ID autenticato, non del nickname locale.
+ async function fetchVerifiedProfile(){
+  const db=await getClient();const {data:{user},error}=await db.auth.getUser();
+  if(error||!user)return null;
+  const {data:result,error:e}=await db.from('profiles').select('user_id,nickname,country_code').eq('user_id',user.id).maybeSingle();
+  if(e)throw e;
+  return result;
+ }
+ window.SudokuOnline={configured,get connected(){return !!client},restore,saveProfile,accountState,linkEmail,sendRecovery,fetchVerifiedProfile,
+  async watchAuth(callback){const db=await getClient();return db.auth.onAuthStateChange((event)=>{
+    if(event==='SIGNED_IN'||event==='USER_UPDATED'||event==='TOKEN_REFRESHED'){
+      // Aspetta la conclusione del callback Supabase prima di chiamare altre API.
+      setTimeout(()=>callback(event),0);
+    }
+  });}
+ };
 })();
