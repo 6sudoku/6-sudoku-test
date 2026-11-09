@@ -1,0 +1,20 @@
+6 Sudoku v0.12.5 — PRIMA INTEGRAZIONE SUPABASE
+
+NOVITÀ
+- Profilo: nickname, paese, preferenze notifiche (non push reali) e sezione email facoltativa (in preparazione).
+- Connessione Supabase Auth (signInAnonymously) e tabelle profiles / profile_settings del database esistente.
+- CAPTCHA Turnstile sul primo accesso se la site key pubblica è configurata.
+- Otto lingue, quattro difficoltà, partite libere e Sfida quotidiana locale intatte.
+
+PER ATTIVARE IL COLLEGAMENTO ONLINE:
+1. Supabase > Project Settings > API Keys: recupera una chiave publishable pubblica (sb_publishable_...).
+2. Cloudflare Turnstile: copia la SITE KEY pubblica del widget 6-sudoku.
+3. Apri js/supabase-config.js e inserisci solo publishableKey e turnstileSiteKey.
+4. Pubblica tutto lo ZIP su GitHub Pages conservando le cartelle.
+5. Prima prova il profilo in una PWA installata. Verifica su Supabase > Authentication > Users e Table Editor.
+6. Attiva la protezione CAPTCHA di Supabase SOLO quando il flusso con Turnstile è stato verificato.
+
+NON PUBBLICARE MAI: service_role, secret key, token privati, password del database.
+NOTA: non è ancora disponibile il recupero via email, Web Push, l'invio di sfide online e la classifica mondiale. La sfida quotidiana attuale usa memoria locale.
+Senza publishableKey l'app continua come v0.12.4 con profilo locale.
+La registrazione con CAPTCHA richiede connettività e servizi esterni. Le partite libere restano offline.
