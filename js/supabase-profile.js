@@ -81,7 +81,7 @@
   if(e)throw e;
   return result;
  }
- window.SudokuOnline={configured,get connected(){return !!client},restore,saveProfile,accountState,linkEmail,sendRecovery,fetchVerifiedProfile,
+ window.SudokuOnline={configured,getClient,get connected(){return !!client},restore,saveProfile,accountState,linkEmail,sendRecovery,fetchVerifiedProfile,
   async watchAuth(callback){const db=await getClient();return db.auth.onAuthStateChange((event)=>{
     if(event==='SIGNED_IN'||event==='USER_UPDATED'||event==='TOKEN_REFRESHED'){
       // Aspetta la conclusione del callback Supabase prima di chiamare altre API.
