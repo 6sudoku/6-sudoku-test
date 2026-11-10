@@ -1,5 +1,5 @@
-/* 6 Sudoku TEST v0.12.7.2: cache isolate e navigazione limitata alla sottocartella TEST. */
-const CACHE='6-sudoku-test-v0127-2';
+/* 6 Sudoku TEST v0.12.8.0: cache isolate e navigazione limitata alla sottocartella TEST. */
+const CACHE='6-sudoku-test-v0128-0';
 const FILES=['./','./index.html','./manifest.webmanifest','./css/style.css','./js/sudoku.js','./js/languages.js','./js/app.js','./js/supabase-config.js','./js/supabase-profile.js','./js/push.js','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png'];
 const SCOPE=new URL(self.registration.scope);
 self.addEventListener('install',event=>{

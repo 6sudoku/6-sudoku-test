@@ -59,3 +59,10 @@
 .push-controls{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .push-controls .btn{width:100%;margin:0}.push-controls .text-button{align-self:center}
 .push-controls .profile-help{margin:4px 0 0;line-height:1.5}
+
+/* Classifica online v0.12.8.0 */
+.online-ranking{margin:15px 0 20px;min-height:56px;color:var(--muted,#63716b);font-size:14px}
+.online-rank-row{display:grid;grid-template-columns:45px minmax(0,1fr) 72px;gap:8px;align-items:center;padding:12px 10px;border-bottom:1px solid #e3e9e3;color:#24382f;text-align:left}
+.online-rank-row span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.online-rank-row strong{text-align:right;font-variant-numeric:tabular-nums}
+.online-rank-you{background:#eaf5ec;border-radius:8px;font-weight:700}

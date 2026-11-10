@@ -1,10 +1,1 @@
-6 Sudoku v0.12.7.2 TEST
-
-- Mantiene integrazione Supabase, profili, email e Web Push della v0.12.7.1.
-- Condivisione WhatsApp: su Android/iOS usa il foglio di condivisione nativo; scegliere WhatsApp. Non apre più wa.me in una nuova finestra PWA quando il menu nativo è disponibile.
-- Service Worker TEST: gestisce esclusivamente /6-sudoku-test/ e non cancella cache ufficiali.
-- Identità manifest TEST invariata: ./test-pwa. Chiavi e identificativi Supabase invariati.
-
-IMPORTANTE: la v0.12.4 ufficiale ha un Service Worker root che intercetta la sottocartella TEST. La sola pubblicazione di questo ZIP non risolve il problema sui vecchi Android. Prima pubblicare il file di compatibilità ufficiale (ZIP separato) nella root della repository ufficiale, poi aprire l'app ufficiale sul telefono interessato e attendere che si aggiorni. Non cancellare dati Chrome.
-
-La condivisione nativa si apre come menu di sistema: scegliere WhatsApp e completare l'invio. Verificare il ritorno alla PWA.
+6 Sudoku TEST v0.12.8.0 — classifica mondiale online (avvia prima la Edge Function daily-ranking).\nNon distribuire sul sito ufficiale.\n
