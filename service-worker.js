@@ -1,5 +1,5 @@
 /* 6 Sudoku TEST v0.12.5: cache esclusiva e Service Worker limitato alla sottocartella. */
-const CACHE='6-sudoku-test-v0127-1';
+const CACHE='6-sudoku-test-v0127-1-fix';
 const FILES=['./','./index.html','./manifest.webmanifest','./css/style.css','./js/sudoku.js','./js/languages.js','./js/app.js','./js/supabase-config.js','./js/supabase-profile.js','./js/push.js','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)));

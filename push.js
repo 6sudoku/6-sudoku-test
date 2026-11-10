@@ -4,7 +4,7 @@
  const VAPID_PUBLIC = "BOCAnRBh0XgVkwSW8oGXDDkIgDjYA2l9W8i9Suu5qhyPD1BVCiQIeJqdHeEBvReBI5FHzF70D8m9CoS34PJmZO0";
  const fnName = 'push-self-test';
  const $ = id => document.getElementById(id);
- const tr = key => (window.I18N?.[document.getElementById('language')?.value||'it']||window.I18N?.it||{})[key] || key;
+ const tr = key => window.I18N?.[document.getElementById('language')?.value||'it']?.[key] ?? window.I18N?.it?.[key] ?? key;
  const status = key => { if ($('pushStatus')) $('pushStatus').textContent = tr(key); };
  const supported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && window.isSecureContext;
  const installed = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
@@ -12,6 +12,7 @@
  const base64ToBytes = input => {const s=input.replace(/-/g,'+').replace(/_/g,'/');const bin=atob(s+'='.repeat((4-s.length%4)%4));return Uint8Array.from(bin,c=>c.charCodeAt(0));};
  let busy=false;
  async function invoke(payload) {
+  if(typeof window.SudokuOnline?.getClient !== 'function') throw Error('Supabase client unavailable');
   const db=await window.SudokuOnline.getClient();
   const {data:{session},error}=await db.auth.getSession();
   if(error||!session) throw Error('No active Supabase session');
@@ -38,13 +39,14 @@
   if(!supported()){status('pushUnsupported');return;}
   if(isIOS()&&!installed()){status('pushInstallFirst');return;}
   if(Notification.permission==='denied'){status('pushBlocked');return;}
-  busy=true;status('pushRegistering');
+  busy=true; $('pushEnableBtn').disabled=true; status('pushRegistering');
   try{
    // Richiesta permesso avviata direttamente dal click del giocatore.
    const permission=await Notification.requestPermission();
    if(permission!=='granted'){status('pushNotAllowed');return;}
    if(!window.SudokuOnline?.configured)throw Error('Supabase not configured');
-   const db=await window.SudokuOnline.getClient();
+   if(typeof window.SudokuOnline?.getClient !== 'function') throw Error('Supabase client unavailable');
+  const db=await window.SudokuOnline.getClient();
    const {data:{session}}=await db.auth.getSession();
    if(!session) {status('pushProfileFirst');return;}
    const reg=await navigator.serviceWorker.ready;
@@ -54,7 +56,7 @@
    await invoke({action:'subscribe',subscription:sub.toJSON()});
    status('pushActive');await refresh();
   }catch(e){console.error('6 Sudoku push subscribe error',e);status('pushError');}
-  finally{busy=false;}
+  finally{busy=false; $('pushEnableBtn').disabled=false;}
  }
  async function test(){if(busy)return;busy=true;status('pushSending');try{await invoke({action:'test'});status('pushSent')}catch(e){console.error('6 Sudoku push test error',e);status('pushError')}finally{busy=false}}
  async function disable(){if(busy)return;busy=true;try{
