@@ -2,9 +2,11 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id), E=window.SudokuEngine;
-const APP_VERSION='0.12.8.0', VERSION_URL='./version.json';
+const APP_VERSION='0.12.8.1', VERSION_URL='./version.json';
 const STORE='6sudoku-test-v012-state', LANGKEY='6sudoku-test-lang', PROFILEKEY='6sudoku-test-profile';
 const LEVELS=['beginner','intermediate','advanced','hero'];
+const LEVEL_LABELS={beginner:'🌱 ZEN',intermediate:'⚡ FOCUS',advanced:'💪 MASTER',hero:'👑 HERO'};
+const levelLabel=key=>LEVEL_LABELS[key]||key;
 const LANGS=[['it','🇮🇹 Italiano'],['en','🇬🇧 English'],['de','🇩🇪 Deutsch'],['fr','🇫🇷 Français'],['zh','🇨🇳 中文'],['ru','🇷🇺 Русский'],['ro','🇷🇴 Română'],['pl','🇵🇱 Polski']];
 const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch(_){return fallback}};
 const save=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value))}catch(_){}};
@@ -16,7 +18,7 @@ const date=()=>E.dateUTC();
 const defaultLang=()=>{let l=(navigator.language||'it').toLowerCase().slice(0,2);return window.I18N[l]?l:'en'};
 let lang=read(LANGKEY,defaultLang()), level='beginner', rankedLevel='beginner', current=null, selected=-1, noteMode=false, timer=null, lastTick=0;
 let state=read(STORE,{stats:[],daily:{},attempts:{},active:null}), profile=read(PROFILEKEY,null), pendingDaily=false, installEvent=null, step=0, shareData=null;
-let remoteDailyBusy=false;
+let remoteDailyBusy=false, lastRankingPayload=null, dailyShareRecord=null;
 const rankMessages={
  it:['Caricamento classifica mondiale…','Nessun risultato registrato oggi.','Classifica temporaneamente non disponibile.','Registra prima il tuo profilo per consultare la classifica.','Tempo ufficiale calcolato dal server.','Connessione necessaria per la Sfida quotidiana online.','Il server non ha confermato il risultato. Controlla la connessione e completa nuovamente l’ultima casella.'],
  en:['Loading worldwide ranking…','No results today.','Ranking temporarily unavailable.','Create your profile to view the ranking.','Official time measured by the server.','Online connection required for the daily challenge.','The server did not confirm the result. Check your connection and complete the last cell again.'],
@@ -27,6 +29,8 @@ const rankMessages={
  ro:['Se încarcă clasamentul mondial…','Niciun rezultat astăzi.','Clasamentul nu este disponibil momentan.','Creează mai întâi un profil.','Timpul oficial este măsurat de server.','Este necesară conexiunea pentru provocarea zilnică.','Serverul nu a confirmat rezultatul. Verifică conexiunea și completează din nou ultima celulă.'],
  pl:['Ładowanie rankingu światowego…','Brak wyników na dziś.','Ranking chwilowo niedostępny.','Najpierw utwórz profil.','Oficjalny czas mierzy serwer.','Wyzwanie dnia wymaga połączenia z siecią.','Serwer nie potwierdził wyniku. Sprawdź sieć i ponownie wypełnij ostatnie pole.']
 };
+const uiStrings={"it":{"launch":"🔥 Lancia la sfida!","viewRank":"Visualizza classifica mondiale","alreadyTitle":"Hai già completato la sfida {level} di oggi!","alreadyBody":"Il tuo tempo è registrato nella classifica mondiale. Torna domani per una nuova sfida!","winDaily":"Complimenti! Hai completato {level}. Il tuo risultato è nella classifica mondiale.","totalPlayers":"Giocatori oggi: {count}","yourPosition":"La tua posizione","topTen":"I primi 10","dailyShareTitle":"La tua sfida di oggi","shareLine1":"🧩 Pensi di essere più veloce di me? 😏","shareLine2":"Ho appena completato {level} di 6 Sudoku!","shareLine3":"⏱️ Il mio tempo ufficiale: {time}","shareLine4":"🏆 Riesci a battermi nella classifica mondiale?","shareLine5":"6 numeri. Una sfida. Vediamo chi è il migliore! 💪","inviteTitle":"{name} ti ha lanciato una sfida!","inviteBody":"Riesci a battere il tempo di {time} in {level}?","joinChallenge":"Partecipa alla sfida","oldInvitation":"La sfida condivisa è di un altro giorno. Puoi giocare quella di oggi!","backRanking":"Torna alla classifica","notFinished":"Non hai ancora completato la sfida di oggi."},"en":{"launch":"🔥 Challenge your friends!","viewRank":"View world ranking","alreadyTitle":"You already completed today’s {level} challenge!","alreadyBody":"Your result is in the world ranking. Come back tomorrow!","winDaily":"Congratulations! You completed {level}. Your result is in the world ranking.","totalPlayers":"Players today: {count}","yourPosition":"Your position","topTen":"Top 10","dailyShareTitle":"Your daily challenge","shareLine1":"🧩 Think you can beat my time? 😏","shareLine2":"I just completed {level} on 6 Sudoku!","shareLine3":"⏱️ My official time: {time}","shareLine4":"🏆 Can you beat me on the world ranking?","shareLine5":"6 numbers. One challenge. Let’s see who is best! 💪","inviteTitle":"{name} challenged you!","inviteBody":"Can you beat {time} on {level}?","joinChallenge":"Join the challenge","oldInvitation":"This invitation is from a previous day. You can play today’s challenge!","backRanking":"Back to ranking","notFinished":"You haven’t finished today’s challenge yet."},"de":{"launch":"🔥 Fordere Freunde heraus!","viewRank":"Weltrangliste ansehen","alreadyTitle":"Du hast die heutige {level}-Challenge bereits abgeschlossen!","alreadyBody":"Dein Ergebnis steht in der Weltrangliste. Komm morgen wieder!","winDaily":"Glückwunsch! {level} geschafft. Dein Ergebnis steht in der Weltrangliste.","totalPlayers":"Spieler heute: {count}","yourPosition":"Dein Platz","topTen":"Top 10","dailyShareTitle":"Deine Tageschallenge","shareLine1":"🧩 Glaubst du, du bist schneller als ich? 😏","shareLine2":"Ich habe {level} bei 6 Sudoku geschafft!","shareLine3":"⏱️ Meine offizielle Zeit: {time}","shareLine4":"🏆 Kannst du mich in der Weltrangliste schlagen?","shareLine5":"6 Zahlen. Eine Challenge. Wer ist der Beste? 💪","inviteTitle":"{name} fordert dich heraus!","inviteBody":"Schaffst du {time} bei {level}?","joinChallenge":"Challenge starten","oldInvitation":"Diese Einladung ist von einem anderen Tag. Spiele die heutige Challenge!","backRanking":"Zur Rangliste","notFinished":"Du hast die heutige Challenge noch nicht abgeschlossen."},"fr":{"launch":"🔥 Lance le défi !","viewRank":"Voir le classement mondial","alreadyTitle":"Tu as déjà terminé le défi {level} du jour !","alreadyBody":"Ton résultat est enregistré. Reviens demain !","winDaily":"Bravo ! Tu as terminé {level}. Ton résultat est au classement mondial.","totalPlayers":"Joueurs aujourd’hui : {count}","yourPosition":"Ta position","topTen":"Top 10","dailyShareTitle":"Ton défi quotidien","shareLine1":"🧩 Tu penses être plus rapide que moi ? 😏","shareLine2":"Je viens de terminer {level} sur 6 Sudoku !","shareLine3":"⏱️ Mon temps officiel : {time}","shareLine4":"🏆 Peux-tu me battre au classement mondial ?","shareLine5":"6 chiffres. Un défi. À qui la victoire ? 💪","inviteTitle":"{name} t’a lancé un défi !","inviteBody":"Peux-tu battre {time} en {level} ?","joinChallenge":"Participer au défi","oldInvitation":"Ce défi date d’un autre jour. Tu peux jouer celui d’aujourd’hui !","backRanking":"Retour au classement","notFinished":"Tu n’as pas encore terminé le défi du jour."},"zh":{"launch":"🔥 发起挑战！","viewRank":"查看世界排行榜","alreadyTitle":"你今天已经完成 {level} 挑战！","alreadyBody":"成绩已记录在世界排行榜。明天再来！","winDaily":"恭喜！你完成了 {level}，成绩已记录。","totalPlayers":"今日玩家：{count}","yourPosition":"你的排名","topTen":"前十名","dailyShareTitle":"今日挑战","shareLine1":"🧩 你能比我更快吗？😏","shareLine2":"我刚完成 6 Sudoku 的 {level}！","shareLine3":"⏱️ 我的官方成绩：{time}","shareLine4":"🏆 你能在排行榜上超过我吗？","shareLine5":"6个数字，一场挑战！💪","inviteTitle":"{name} 向你发起挑战！","inviteBody":"你能在 {level} 打破 {time} 吗？","joinChallenge":"参加挑战","oldInvitation":"这条邀请来自之前的日期。欢迎挑战今天的题目！","backRanking":"返回排行榜","notFinished":"你还没有完成今天的挑战。"},"ru":{"launch":"🔥 Брось вызов!","viewRank":"Открыть мировой рейтинг","alreadyTitle":"Сегодняшний {level} уже пройден!","alreadyBody":"Результат сохранён. Возвращайся завтра!","winDaily":"Поздравляем! {level} пройден, результат в мировом рейтинге.","totalPlayers":"Игроков сегодня: {count}","yourPosition":"Твоя позиция","topTen":"Топ-10","dailyShareTitle":"Твой ежедневный вызов","shareLine1":"🧩 Думаешь, ты быстрее меня? 😏","shareLine2":"Я прошёл {level} в 6 Sudoku!","shareLine3":"⏱️ Моё официальное время: {time}","shareLine4":"🏆 Сможешь обойти меня в мировом рейтинге?","shareLine5":"6 цифр. Один вызов! 💪","inviteTitle":"{name} бросил тебе вызов!","inviteBody":"Сможешь побить {time} в {level}?","joinChallenge":"Принять вызов","oldInvitation":"Это приглашение за другой день. Играй сегодня!","backRanking":"Назад к рейтингу","notFinished":"Сегодняшнее задание ещё не завершено."},"ro":{"launch":"🔥 Lansează provocarea!","viewRank":"Vezi clasamentul mondial","alreadyTitle":"Ai terminat deja provocarea {level} de azi!","alreadyBody":"Rezultatul tău este în clasament. Revino mâine!","winDaily":"Felicitări! Ai terminat {level}. Rezultatul este în clasament.","totalPlayers":"Jucători azi: {count}","yourPosition":"Poziția ta","topTen":"Top 10","dailyShareTitle":"Provocarea zilnică","shareLine1":"🧩 Crezi că ești mai rapid? 😏","shareLine2":"Am terminat {level} la 6 Sudoku!","shareLine3":"⏱️ Timpul meu oficial: {time}","shareLine4":"🏆 Mă poți întrece în clasamentul mondial?","shareLine5":"6 numere. O provocare! 💪","inviteTitle":"{name} te-a provocat!","inviteBody":"Poți depăși {time} la {level}?","joinChallenge":"Acceptă provocarea","oldInvitation":"Invitația este pentru altă zi. Joacă provocarea de azi!","backRanking":"Înapoi la clasament","notFinished":"Nu ai terminat încă provocarea de azi."},"pl":{"launch":"🔥 Rzuć wyzwanie!","viewRank":"Zobacz ranking światowy","alreadyTitle":"Dzisiejsze wyzwanie {level} jest już ukończone!","alreadyBody":"Twój wynik jest w rankingu. Wróć jutro!","winDaily":"Gratulacje! Ukończono {level}. Wynik jest w rankingu.","totalPlayers":"Graczy dzisiaj: {count}","yourPosition":"Twoja pozycja","topTen":"Top 10","dailyShareTitle":"Dzisiejsze wyzwanie","shareLine1":"🧩 Myślisz, że jesteś szybszy? 😏","shareLine2":"Właśnie ukończyłem {level} w 6 Sudoku!","shareLine3":"⏱️ Mój oficjalny czas: {time}","shareLine4":"🏆 Pokonasz mnie w rankingu światowym?","shareLine5":"6 cyfr. Jedno wyzwanie! 💪","inviteTitle":"{name} rzuca ci wyzwanie!","inviteBody":"Pobijesz {time} w {level}?","joinChallenge":"Dołącz do wyzwania","oldInvitation":"Zaproszenie dotyczy innego dnia. Zagraj dzisiaj!","backRanking":"Wróć do rankingu","notFinished":"Nie ukończyłeś jeszcze dzisiejszego wyzwania."}};
+const ui=(key,params={})=>(uiStrings[lang]||uiStrings.it)[key].replace(/\{(\w+)\}/g,(_,k)=>params[k]??'');
 const rankText=n=>(rankMessages[lang]||rankMessages.it)[n];
 async function dailyApi(action,difficulty,values){
  if(!window.SudokuOnline?.configured||!navigator.onLine)throw Error('Offline or no Supabase');
@@ -115,7 +119,7 @@ function initPullRefresh(){
 
 const tr=(k,params={})=>{let s=window.I18N[lang]?.[k]??window.I18N.it[k]??k;return s.replace(/\{(\w+)\}/g,(_,key)=>params[key]??'')};
 function changeLanguage(next){if(!window.I18N[next])return;lang=next;save(LANGKEY,lang);applyTexts();if(current){$('gameTitle').textContent=gameTitle();drawBoard();}if($('ranking').classList.contains('active'))drawRanking();if($('rulesDialog').open)renderRules();if($('installDialog').open)drawStep();if($('profileDialog').open){drawProfile();if(emailStatusKey)showEmailStatus(emailStatusKey,emailStatusParams)}drawDailyFeature();if($('dailyConfirmDialog').open)drawDailyConfirm();if($('updateDialog').open&&pendingVersion)$('updateDescription').textContent=tr('updateDescription',{version:pendingVersion});if($('updateFeedback').textContent)updateFeedback(pendingVersion?'updateReady':'')}
-function applyTexts(){document.documentElement.lang=lang;$('language').value=lang;document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=tr(el.dataset.t)});$('notesBtn').textContent=tr(noteMode?'notesOn':'notesOff');document.querySelectorAll('[data-level]').forEach(el=>el.classList.toggle('active',el.dataset.level===level));document.querySelectorAll('[data-rank]').forEach(el=>el.classList.toggle('active',el.dataset.rank===rankedLevel));}
+function applyTexts(){document.documentElement.lang=lang;$('language').value=lang;document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=tr(el.dataset.t)});$('notesBtn').textContent=tr(noteMode?'notesOn':'notesOff');document.querySelectorAll('[data-level]').forEach(el=>{const node=el.querySelector('.level-copy strong');if(node)node.textContent=levelLabel(el.dataset.level)});document.querySelectorAll('[data-rank]').forEach(el=>{el.textContent=levelLabel(el.dataset.rank)});$('dailyConfirmLevel').textContent=levelLabel(level);$('rankShareBtn').textContent=ui('launch');$('winShare').textContent=current?.mode==='daily'?ui('launch'):tr('challengeFriend');$('winRanking').textContent=ui('viewRank');$('dailyAlreadyShare').textContent=ui('launch');$('dailyAlreadyRanking').textContent=ui('viewRank');$('inviteStart').textContent=ui('joinChallenge');document.querySelectorAll('[data-level]').forEach(el=>el.classList.toggle('active',el.dataset.level===level));document.querySelectorAll('[data-rank]').forEach(el=>el.classList.toggle('active',el.dataset.rank===rankedLevel));}
 function show(id){if(id==='home'){drawDailyFeature();setTimeout(showUpdateIfReady,0)}document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el.id===id));window.scrollTo?.(0,0);if(id==='ranking')drawRanking();if(id==='statsScreen')drawStats()}
 function openDialog(id){if(!$(id).open)$(id).showModal()}
 function closeDialog(id){if($(id).open)$(id).close()}
@@ -123,9 +127,9 @@ function todayKey(chosen=level){return date()+'|'+chosen}
 function activeDaily(chosen=level){const a=state.active;return a?.mode==='daily'&&a.day===date()&&a.level===chosen&&!a.finished&&Array.isArray(a.values)&&a.values.length===36}
 function dailyStatus(chosen=level){const key=todayKey(chosen);return state.daily[key]?'dailyStatusDone':activeDaily(chosen)?'dailyStatusActive':state.attempts?.[key]?'dailyStatusSpent':'dailyStatusNew'}
 function drawDailyFeature(){const el=$('dailyFeatureStatus');if(el)el.textContent=tr(dailyStatus(),{level:tr(level)})}
-function drawDailyConfirm(){$('dailyConfirmLevel').textContent=tr(level);$('dailyConfirmStart').textContent=tr('dailyStart')}
+function drawDailyConfirm(){$('dailyConfirmLevel').textContent=levelLabel(level);$('dailyConfirmStart').textContent=tr('dailyStart')}
 function askDaily(){if(!isInstalled()){step=0;openInstall();return}if(!profile?.name){pendingDaily=true;drawProfile();openDialog('profileDialog');return}
- const key=todayKey();if(state.daily[key]){rankedLevel=level;show('ranking');return}
+ const key=todayKey();if(state.daily[key]){showAlreadyDone(level,state.daily[key].score);return}
  if(activeDaily()){current=state.active;enterGame();return}
  if(state.attempts[key]){alert(tr('dailyAlreadyStarted'));rankedLevel=level;show('ranking');return}
  drawDailyConfirm();openDialog('dailyConfirmDialog')}
@@ -136,7 +140,7 @@ async function confirmDaily(){
  try{
   const started=await dailyApi('start',level);
   if(started.day!==date())throw Error('Date changed');
-  if(started.status!=='in_progress'){closeDialog('dailyConfirmDialog');alert(tr('dailyAlreadyStarted'));rankedLevel=level;show('ranking');return}
+  if(started.status!=='in_progress'){closeDialog('dailyConfirmDialog');if(started.status==='completed'){showAlreadyDone(level,started.elapsed_ms?Math.ceil(started.elapsed_ms/1000):null)}else{alert(tr('dailyAlreadyStarted'));rankedLevel=level;show('ranking')}return}
   if(!/^[0-6]{36}$/.test(started.puzzle))throw Error('Invalid puzzle response');
   const nums=Array.from(started.puzzle,Number);
   const g={mode:'daily',seed:'online-'+started.day,level,puzzle:nums,solution:null,values:[...nums],notes:Array.from({length:36},()=>[]),elapsed:0,hints:0,day:started.day,target:null,finished:false,dailyOnline:true};
@@ -169,7 +173,7 @@ async function win(){
   try{
    const confirmed=await dailyApi('finish',current.level,current.values.join(''));
    if(confirmed.status!=='completed')throw Error('Unconfirmed result');
-   current.elapsed=Math.ceil(confirmed.elapsed_ms/1000);
+   current.elapsed=Math.ceil(confirmed.elapsed_ms/1000);dailyShareRecord={level:current.level,score:current.elapsed,day:confirmed.day||date()};
   }catch(err){
    console.error('Daily challenge finish error',err);
    alert(rankText(6)+'\n'+(err?.message||''));
@@ -178,30 +182,96 @@ async function win(){
   }
   remoteDailyBusy=false;
  }
- clearInterval(timer);current.finished=true;let result={day:date(),mode:current.mode,level:current.level,score:current.elapsed,hints:current.hints,seed:current.seed};state.stats.push(result);state.stats=state.stats.slice(-500);if(current.mode==='daily'){const key=current.day+'|'+current.level;if(!state.daily[key])state.daily[key]=result;if(!state.attempts[key])state.attempts[key]={startedAt:new Date().toISOString()}}state.active=null;save(STORE,state);$('winTime').textContent=format(current.elapsed);$('winDetails').textContent=tr('finishedDetail',{level:tr(current.level),hints:current.hints});let comparison='';if(current.target!==null){comparison=current.elapsed<current.target?tr('winBeat'):current.elapsed>current.target?tr('winLost'):tr('winTie')}$('winCompare').textContent=comparison;openDialog('winDialog')}
+ clearInterval(timer);current.finished=true;let result={day:date(),mode:current.mode,level:current.level,score:current.elapsed,hints:current.hints,seed:current.seed};state.stats.push(result);state.stats=state.stats.slice(-500);if(current.mode==='daily'){const key=current.day+'|'+current.level;if(!state.daily[key])state.daily[key]=result;if(!state.attempts[key])state.attempts[key]={startedAt:new Date().toISOString()}}state.active=null;save(STORE,state);$('winTime').textContent=format(current.elapsed);$('winDetails').textContent=current.mode==='daily'?ui('winDaily',{level:levelLabel(current.level)}):tr('finishedDetail',{level:tr(current.level),hints:current.hints});$('winRanking').classList.toggle('hidden',current.mode!=='daily');$('winNew').classList.toggle('hidden',current.mode==='daily');$('winShare').textContent=current.mode==='daily'?ui('launch'):tr('challengeFriend');let comparison='';if(current.target!==null){comparison=current.elapsed<current.target?tr('winBeat'):current.elapsed>current.target?tr('winLost'):tr('winTie')}$('winCompare').textContent=comparison;openDialog('winDialog')}
 function goHome(){pauseTimer();show('home')}
 function drawStats(){let all=state.stats||[],today=all.filter(s=>s.day===date()),best=all.length?Math.min(...all.map(s=>s.score)):null;$('statWins').textContent=all.length;$('statToday').textContent=today.length;$('statBest').textContent=best===null?'—':format(best);$('statDaily').textContent=all.filter(s=>s.mode==='daily').length}
-function drawRanking(){const key=date()+'|'+rankedLevel,r=state.daily[key];$('rankingDate').textContent=date()+' · UTC';$('rankName').textContent=profile?.name||'—';$('rankCountry').textContent=profile?.country?countryEmoji(profile.country):'';$('rankTime').textContent=r?format(r.score):'—:—';$('ranking').querySelector('.you').classList.toggle('hidden',!r||!profile);$('rankStatus').textContent=r?tr('dailyDoneMsg'):tr(profile?'noDaily':'noProfile');document.querySelectorAll('[data-rank]').forEach(b=>b.classList.toggle('active',b.dataset.rank===rankedLevel));loadRemoteRanking(rankedLevel)}
+function showAlreadyDone(chosen,score){
+ rankedLevel=chosen;dailyShareRecord=Number.isFinite(score)?{level:chosen,score,day:date()}:null;
+ $('dailyAlreadyTitle').textContent=ui('alreadyTitle',{level:levelLabel(chosen)});
+ $('dailyAlreadyBody').textContent=ui('alreadyBody');
+ $('dailyAlreadyTime').textContent=Number.isFinite(score)?format(score):'—:—';
+ $('dailyAlreadyShare').classList.toggle('hidden',!Number.isFinite(score));
+ closeDialog('dailyConfirmDialog');openDialog('dailyAlreadyDialog');
+}
+function drawRanking(){
+ const key=date()+'|'+rankedLevel,r=state.daily[key];lastRankingPayload=null;
+ $('rankingDate').textContent=date()+' · UTC';
+ $('rankName').textContent=profile?.name||'—';
+ $('rankCountry').textContent=profile?.country?countryEmoji(profile.country):'';
+ $('rankTime').textContent=r?format(r.score):'—:—';
+ $('ranking').querySelector('.you').classList.toggle('hidden',!r||!profile);
+ $('rankStatus').textContent=r?tr('dailyDoneMsg'):tr(profile?'noDaily':'noProfile');
+ $('rankShareBtn').classList.toggle('hidden',!r);
+ document.querySelectorAll('[data-rank]').forEach(b=>b.classList.toggle('active',b.dataset.rank===rankedLevel));
+ loadRemoteRanking(rankedLevel);
+}
 let rankRequest=0;
+function rankRow(entry){
+ const row=document.createElement('div');row.className='online-rank-row'+(entry.you?' online-rank-you':'');
+ const place=document.createElement('span');place.textContent='#'+entry.rank;
+ const name=document.createElement('span');name.textContent=(countryEmoji(entry.country)||'🌍')+' '+entry.name+(entry.you?' · '+tr('you'):'');
+ const score=document.createElement('strong');score.textContent=format(Math.ceil(entry.elapsed_ms/1000));
+ row.append(place,name,score);return row;
+}
 async function loadRemoteRanking(chosen){
  const el=$('onlineRanking');if(!el)return;
- const request=++rankRequest;
- el.textContent=rankText(0);
+ const request=++rankRequest;el.textContent=rankText(0);
  if(!profile?.name){el.textContent=rankText(3);return}
  try{
   const result=await dailyApi('ranking',chosen);
   if(request!==rankRequest||chosen!==rankedLevel||!$('ranking').classList.contains('active'))return;
-  el.replaceChildren();
-  if(!result.entries?.length){el.textContent=rankText(1);return}
-  for(const entry of result.entries){
-   const row=document.createElement('div');row.className='online-rank-row'+(entry.you?' online-rank-you':'');
-   const place=document.createElement('span');place.textContent='#'+entry.rank;
-   const name=document.createElement('span');name.textContent=(countryEmoji(entry.country)||'🌍')+' '+entry.name+(entry.you?' · '+tr('you'):'');
-   const score=document.createElement('strong');score.textContent=format(Math.ceil(entry.elapsed_ms/1000));
-   row.append(place,name,score);el.append(row);
+  lastRankingPayload={...result,level:chosen};el.replaceChildren();
+  const entries=(result.entries||[]).slice(0,10);
+  const total=Number.isInteger(result.total)?result.total:entries.length;
+  const counter=document.createElement('p');counter.className='ranking-count';counter.textContent=ui('totalPlayers',{count:total.toLocaleString(lang)});el.append(counter);
+  if(!entries.length){const empty=document.createElement('p');empty.textContent=rankText(1);el.append(empty)}
+  else{
+   const heading=document.createElement('div');heading.className='ranking-group-title';heading.textContent=ui('topTen');el.append(heading);
+   entries.forEach(entry=>el.append(rankRow(entry)));
+  }
+  const mine=result.self;
+  if(mine?.status==='completed'&&Number.isFinite(mine.elapsed_ms)){
+   const seconds=Math.ceil(mine.elapsed_ms/1000);
+   $('rankTime').textContent=format(seconds);
+   $('rankStatus').textContent=tr('dailyDoneMsg');
+   $('ranking').querySelector('.you').classList.remove('hidden');
+   $('rankShareBtn').classList.remove('hidden');
+   if(mine.rank>10){
+    const heading=document.createElement('div');heading.className='ranking-group-title ranking-self-title';heading.textContent=ui('yourPosition');el.append(heading);
+    el.append(rankRow({rank:mine.rank,name:profile?.name||mine.name||'Giocatore',country:profile?.country||mine.country||'ZZ',elapsed_ms:mine.elapsed_ms,you:true}));
+   }
   }
   const note=document.createElement('p');note.className='small-muted';note.textContent=rankText(4);el.append(note);
  }catch(err){console.error('Daily ranking error',err);if(request===rankRequest)el.textContent=rankText(2)}
+}
+function getDailyShare(chosen,score,day=date()){
+ if(!Number.isFinite(score))return null;
+ const name=profile?.name||'6 Sudoku';
+ const url=new URL('./',location.href);
+ url.searchParams.set('daily',day);url.searchParams.set('level',chosen);url.searchParams.set('from',name.slice(0,20));url.searchParams.set('time',String(Math.max(0,Math.round(score))));
+ const time=format(score),lvl=levelLabel(chosen);
+ const message=[ui('shareLine1'),'',name+' — '+ui('shareLine2',{level:lvl}),ui('shareLine3',{time}),'',ui('shareLine4'),'',ui('shareLine5'),'',url.href].join('\n');
+ return {url:url.href,message};
+}
+function shareDailyFromRanking(){
+ const mine=lastRankingPayload?.level===rankedLevel?lastRankingPayload.self:null;
+ const record=state.daily[todayKey(rankedLevel)];
+ const seconds=mine?.status==='completed'&&Number.isFinite(mine.elapsed_ms)?Math.ceil(mine.elapsed_ms/1000):record?.score;
+ const content=getDailyShare(rankedLevel,seconds);
+ if(!content){alert(ui('notFinished'));return}
+ shareData=content;openDialog('shareDialog');
+}
+function showDailyInvitation(){
+ const q=new URLSearchParams(location.search),day=q.get('daily'),chosen=q.get('level');
+ if(!day||!LEVELS.includes(chosen))return false;
+ const from=(q.get('from')||'6 Sudoku').slice(0,20);
+ const secs=Number(q.get('time'));if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Number.isInteger(secs)||secs<0||secs>86400)return false;
+ level=chosen;rankedLevel=chosen;applyTexts();drawDailyFeature();
+ $('inviteTitle').textContent=ui('inviteTitle',{name:from});
+ $('inviteBody').textContent=day===date()?ui('inviteBody',{time:format(secs),level:levelLabel(chosen)}):ui('oldInvitation');
+ openDialog('dailyInviteDialog');
+ history.replaceState(null,'',new URL('./',location.href).pathname);
+ return true;
 }
 
 let emailStatusKey='', emailStatusParams={};
@@ -273,7 +343,7 @@ function drawStep(){const icons=['🌐','📤','➕','📲','🧩'];$('stepIllus
 async function requestInstall(){if(installEvent){installEvent.prompt();try{await installEvent.userChoice}catch(_){}installEvent=null;closeDialog('installDialog')}else openInstall()}
 function challengeURL(){const u=new URL('./',location.href);if(!current)return u.href;u.searchParams.set('s',current.seed);u.searchParams.set('d',current.level);if(current.finished)u.searchParams.set('t',String(current.elapsed));return u.href}
 function buildShare(appOnly){const url=appOnly?new URL('./',location.href).href:challengeURL();const vars={url,time:current?format(current.elapsed):'',level:current?tr(current.level):'',hints:current?.hints?tr('shareWithHints',{count:current.hints}):''};return {url,message:tr(appOnly?'shareAppMessage':current?.finished?'shareChallengeMessage':'shareOpenMessage',vars)}}
-function openShare(appOnly){shareData=buildShare(appOnly);openDialog('shareDialog')}
+function openShare(appOnly){if(!appOnly&&current?.mode==='daily'&&current.finished){shareData=getDailyShare(current.level,current.elapsed,current.day)}else shareData=buildShare(appOnly);if(shareData)openDialog('shareDialog')}
 async function shareWhatsApp(){
  if(!shareData)return;
  const text=shareData.message;
@@ -297,7 +367,7 @@ async function shareWhatsApp(){
 }
 async function shareNative(){if(!shareData)return;try{if(navigator.share){await navigator.share({title:'6 Sudoku',text:shareData.message});return}}catch(e){if(e.name==='AbortError')return}await copyLink()}
 async function copyLink(){if(!shareData)return;try{await navigator.clipboard.writeText(shareData.url);alert(tr('copied'))}catch(_){window.prompt(tr('copyFail'),shareData.url)}}
-function wire(){LANGS.forEach(([code,name])=>{let opt=document.createElement('option');opt.value=code;opt.textContent=name;$('language').append(opt)});$('language').onchange=e=>changeLanguage(e.target.value);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{level=b.dataset.level;applyTexts();drawDailyFeature()});$('freeBtn').onclick=()=>start('free');$('dailyBtn').onclick=askDaily;$('dailyConfirmStart').onclick=confirmDaily;$('rankingBtn').onclick=()=>show('ranking');$('statsBtn').onclick=()=>show('statsScreen');$('rulesBtn').onclick=$('rulesGameBtn').onclick=()=>{renderRules();openDialog('rulesDialog')};$('shareAppBtn').onclick=()=>openShare(true);$('checkUpdatesBtn').onclick=()=>checkForUpdate(false);$('updateLater').onclick=()=>closeDialog('updateDialog');$('updateNow').onclick=applyUpdate;$('installBtn').onclick=openInstall;document.querySelectorAll('[data-back]').forEach(b=>b.onclick=goHome);$('rankingTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{rankedLevel=b.dataset.rank;drawRanking()});$('editProfileBtn').onclick=()=>{drawProfile();openDialog('profileDialog');window.SudokuPush?.refresh().catch(()=>{})};$('rankDailyBtn').onclick=()=>{level=rankedLevel;applyTexts();start('daily')};$('profileForm').onsubmit=saveProfile;$('linkEmailBtn').onclick=linkProfileEmail;$('recoverEmailBtn').onclick=recoverProfileEmail;$('nickname').addEventListener('input',updatePreview);$('country').addEventListener('change',updatePreview);document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeDialog(b.dataset.close));$('numkeys').innerHTML=Array.from({length:6},(_,i)=>`<button type="button">${i+1}</button>`).join('');$('numkeys').querySelectorAll('button').forEach((b,i)=>b.onclick=()=>enterNumber(i+1));$('eraseBtn').onclick=erase;$('notesBtn').onclick=()=>{noteMode=!noteMode;applyTexts();$('notesBtn').classList.toggle('active',noteMode)};$('hintBtn').onclick=hint;$('stepPrev').onclick=()=>{step=Math.max(0,step-1);drawStep()};$('stepNext').onclick=()=>{if(step===4)closeDialog('installDialog');else{step++;drawStep()}};$('installConfirm').onclick=requestInstall;$('winNew').onclick=()=>{closeDialog('winDialog');start('free')};$('winHome').onclick=()=>{closeDialog('winDialog');show('home')};$('winShare').onclick=()=>{closeDialog('winDialog');openShare(false)};$('whatsappBtn').onclick=shareWhatsApp;$('nativeShareBtn').onclick=shareNative;$('copyLinkBtn').onclick=copyLink;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e});window.addEventListener('appinstalled',()=>{$('installBanner').classList.add('hidden');closeDialog('installDialog')});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')pauseTimer();else if(current&&!current.finished&&$('game').classList.contains('active'))startTimer()});window.addEventListener('pagehide',()=>{pauseTimer();saveState()})}
-function init(){normalizeState();if(window.SudokuOnline?.configured){reconcileOnlineIdentity();window.SudokuOnline.watchAuth(()=>reconcileOnlineIdentity()).catch(()=>{});}initPreview();wire();applyTexts();drawDailyFeature();$('installBanner').classList.toggle('hidden',isInstalled());deepLink=getChallengeParams();if(deepLink?.invalid){alert(tr('invalidLink'))}else if(deepLink){level=deepLink.level;applyTexts();start('challenge')}else if(state.active&&!state.active.finished){const a=state.active;if(a.mode==='daily'&&a.day!==date()){state.active=null;saveState();return}if(a.mode==='daily'&&!isInstalled()){openInstall();return}if(Array.isArray(a.values)&&a.values.length===36&&((a.dailyOnline&&a.solution===null)||(Array.isArray(a.solution)&&a.solution.length===36))){current=a;enterGame()}}initPullRefresh();watchServiceWorker();}
+function wire(){LANGS.forEach(([code,name])=>{let opt=document.createElement('option');opt.value=code;opt.textContent=name;$('language').append(opt)});$('language').onchange=e=>changeLanguage(e.target.value);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{level=b.dataset.level;applyTexts();drawDailyFeature()});$('freeBtn').onclick=()=>start('free');$('dailyBtn').onclick=askDaily;$('dailyConfirmStart').onclick=confirmDaily;$('rankingBtn').onclick=()=>show('ranking');$('statsBtn').onclick=()=>show('statsScreen');$('rulesBtn').onclick=$('rulesGameBtn').onclick=()=>{renderRules();openDialog('rulesDialog')};$('shareAppBtn').onclick=()=>openShare(true);$('checkUpdatesBtn').onclick=()=>checkForUpdate(false);$('updateLater').onclick=()=>closeDialog('updateDialog');$('updateNow').onclick=applyUpdate;$('installBtn').onclick=openInstall;document.querySelectorAll('[data-back]').forEach(b=>b.onclick=goHome);$('rankingTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{rankedLevel=b.dataset.rank;drawRanking()});$('editProfileBtn').onclick=()=>{drawProfile();openDialog('profileDialog');window.SudokuPush?.refresh().catch(()=>{})};$('rankDailyBtn').onclick=()=>{level=rankedLevel;applyTexts();start('daily')};$('rankShareBtn').onclick=shareDailyFromRanking;$('winRanking').onclick=()=>{closeDialog('winDialog');rankedLevel=current?.level||level;show('ranking')};$('dailyAlreadyShare').onclick=()=>{const key=state.daily[todayKey(rankedLevel)];const score=dailyShareRecord?.score??key?.score;if(!Number.isFinite(score)){closeDialog('dailyAlreadyDialog');show('ranking');return}shareData=getDailyShare(rankedLevel,score);closeDialog('dailyAlreadyDialog');openDialog('shareDialog')};$('dailyAlreadyRanking').onclick=()=>{closeDialog('dailyAlreadyDialog');show('ranking')};$('inviteStart').onclick=()=>{closeDialog('dailyInviteDialog');askDaily()};$('dailyAlreadyHome').onclick=()=>{closeDialog('dailyAlreadyDialog');show('home')};$('inviteHome').onclick=()=>{closeDialog('dailyInviteDialog');show('home')};$('profileForm').onsubmit=saveProfile;$('linkEmailBtn').onclick=linkProfileEmail;$('recoverEmailBtn').onclick=recoverProfileEmail;$('nickname').addEventListener('input',updatePreview);$('country').addEventListener('change',updatePreview);document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeDialog(b.dataset.close));$('numkeys').innerHTML=Array.from({length:6},(_,i)=>`<button type="button">${i+1}</button>`).join('');$('numkeys').querySelectorAll('button').forEach((b,i)=>b.onclick=()=>enterNumber(i+1));$('eraseBtn').onclick=erase;$('notesBtn').onclick=()=>{noteMode=!noteMode;applyTexts();$('notesBtn').classList.toggle('active',noteMode)};$('hintBtn').onclick=hint;$('stepPrev').onclick=()=>{step=Math.max(0,step-1);drawStep()};$('stepNext').onclick=()=>{if(step===4)closeDialog('installDialog');else{step++;drawStep()}};$('installConfirm').onclick=requestInstall;$('winNew').onclick=()=>{closeDialog('winDialog');start('free')};$('winHome').onclick=()=>{closeDialog('winDialog');show('home')};$('winShare').onclick=()=>{closeDialog('winDialog');openShare(false)};$('whatsappBtn').onclick=shareWhatsApp;$('nativeShareBtn').onclick=shareNative;$('copyLinkBtn').onclick=copyLink;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e});window.addEventListener('appinstalled',()=>{$('installBanner').classList.add('hidden');closeDialog('installDialog')});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')pauseTimer();else if(current&&!current.finished&&$('game').classList.contains('active'))startTimer()});window.addEventListener('pagehide',()=>{pauseTimer();saveState()})}
+function init(){normalizeState();if(window.SudokuOnline?.configured){reconcileOnlineIdentity();window.SudokuOnline.watchAuth(()=>reconcileOnlineIdentity()).catch(()=>{});}initPreview();wire();applyTexts();drawDailyFeature();$('installBanner').classList.toggle('hidden',isInstalled());deepLink=getChallengeParams();if(deepLink?.invalid){alert(tr('invalidLink'))}else if(deepLink){level=deepLink.level;applyTexts();start('challenge')}else if(showDailyInvitation()){}else if(state.active&&!state.active.finished){const a=state.active;if(a.mode==='daily'&&a.day!==date()){state.active=null;saveState();return}if(a.mode==='daily'&&!isInstalled()){openInstall();return}if(Array.isArray(a.values)&&a.values.length===36&&((a.dailyOnline&&a.solution===null)||(Array.isArray(a.solution)&&a.solution.length===36))){current=a;enterGame()}}initPullRefresh();watchServiceWorker();}
 init();
 })();
