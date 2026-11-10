@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id), E=window.SudokuEngine;
-const APP_VERSION='0.12.7.2', VERSION_URL='./version.json';
+const APP_VERSION='0.12.8.0', VERSION_URL='./version.json';
 const STORE='6sudoku-test-v012-state', LANGKEY='6sudoku-test-lang', PROFILEKEY='6sudoku-test-profile';
 const LEVELS=['beginner','intermediate','advanced','hero'];
 const LANGS=[['it','🇮🇹 Italiano'],['en','🇬🇧 English'],['de','🇩🇪 Deutsch'],['fr','🇫🇷 Français'],['zh','🇨🇳 中文'],['ru','🇷🇺 Русский'],['ro','🇷🇴 Română'],['pl','🇵🇱 Polski']];
@@ -16,6 +16,28 @@ const date=()=>E.dateUTC();
 const defaultLang=()=>{let l=(navigator.language||'it').toLowerCase().slice(0,2);return window.I18N[l]?l:'en'};
 let lang=read(LANGKEY,defaultLang()), level='beginner', rankedLevel='beginner', current=null, selected=-1, noteMode=false, timer=null, lastTick=0;
 let state=read(STORE,{stats:[],daily:{},attempts:{},active:null}), profile=read(PROFILEKEY,null), pendingDaily=false, installEvent=null, step=0, shareData=null;
+let remoteDailyBusy=false;
+const rankMessages={
+ it:['Caricamento classifica mondiale…','Nessun risultato registrato oggi.','Classifica temporaneamente non disponibile.','Registra prima il tuo profilo per consultare la classifica.','Tempo ufficiale calcolato dal server.','Connessione necessaria per la Sfida quotidiana online.','Il server non ha confermato il risultato. Controlla la connessione e completa nuovamente l’ultima casella.'],
+ en:['Loading worldwide ranking…','No results today.','Ranking temporarily unavailable.','Create your profile to view the ranking.','Official time measured by the server.','Online connection required for the daily challenge.','The server did not confirm the result. Check your connection and complete the last cell again.'],
+ de:['Weltrangliste wird geladen…','Heute noch keine Ergebnisse.','Rangliste vorübergehend nicht verfügbar.','Erstelle zuerst dein Profil.','Offizielle Zeit vom Server gemessen.','Online-Verbindung für die Tagesaufgabe erforderlich.','Ergebnis nicht bestätigt. Verbindung prüfen und letztes Feld erneut ausfüllen.'],
+ fr:['Chargement du classement mondial…','Aucun résultat aujourd’hui.','Classement temporairement indisponible.','Créez votre profil pour voir le classement.','Temps officiel mesuré par le serveur.','Connexion requise pour le défi quotidien.','Résultat non confirmé. Vérifiez la connexion et remplissez la dernière case à nouveau.'],
+ zh:['正在加载世界排行榜…','今日暂无成绩。','排行榜暂时不可用。','请先创建个人资料。','官方时间由服务器计时。','每日挑战需要网络连接。','服务器未确认成绩。检查网络并重新填写最后一格。'],
+ ru:['Загрузка мирового рейтинга…','Сегодня результатов нет.','Рейтинг временно недоступен.','Сначала создайте профиль.','Официальное время измеряется сервером.','Для ежедневного задания нужен интернет.','Сервер не подтвердил результат. Проверьте связь и повторно заполните последнюю клетку.'],
+ ro:['Se încarcă clasamentul mondial…','Niciun rezultat astăzi.','Clasamentul nu este disponibil momentan.','Creează mai întâi un profil.','Timpul oficial este măsurat de server.','Este necesară conexiunea pentru provocarea zilnică.','Serverul nu a confirmat rezultatul. Verifică conexiunea și completează din nou ultima celulă.'],
+ pl:['Ładowanie rankingu światowego…','Brak wyników na dziś.','Ranking chwilowo niedostępny.','Najpierw utwórz profil.','Oficjalny czas mierzy serwer.','Wyzwanie dnia wymaga połączenia z siecią.','Serwer nie potwierdził wyniku. Sprawdź sieć i ponownie wypełnij ostatnie pole.']
+};
+const rankText=n=>(rankMessages[lang]||rankMessages.it)[n];
+async function dailyApi(action,difficulty,values){
+ if(!window.SudokuOnline?.configured||!navigator.onLine)throw Error('Offline or no Supabase');
+ const db=await window.SudokuOnline.getClient();
+ const {data:{session},error}=await db.auth.getSession();
+ if(error||!session)throw Error('Player profile not connected');
+ const {data,response,error:err}=await db.functions.invoke('daily-ranking',{body:{action,difficulty,...(values?{values}:{})}});
+ if(err)throw err;
+ if(data?.error)throw Error(data.error);
+ return data;
+}
 let deepLink=null;
 let swRegistration=null, pendingVersion=null, checking=false, updating=false, updateCheckOnHome=false, updateControllerSeen=false;
 const versionParts=v=>String(v).split('.').map(x=>Number(x)||0);
@@ -107,7 +129,21 @@ function askDaily(){if(!isInstalled()){step=0;openInstall();return}if(!profile?.
  if(activeDaily()){current=state.active;enterGame();return}
  if(state.attempts[key]){alert(tr('dailyAlreadyStarted'));rankedLevel=level;show('ranking');return}
  drawDailyConfirm();openDialog('dailyConfirmDialog')}
-function confirmDaily(){closeDialog('dailyConfirmDialog');const key=todayKey();if(state.attempts[key]||state.daily[key]){askDaily();return}const g=buildGame('daily',level,'daily-'+date());state.attempts[key]={startedAt:new Date().toISOString()};current=g;state.active=g;saveState();enterGame()}
+async function confirmDaily(){
+ if(remoteDailyBusy)return;
+ const key=todayKey();if(state.attempts[key]||state.daily[key]){closeDialog('dailyConfirmDialog');askDaily();return}
+ remoteDailyBusy=true;$('dailyConfirmStart').disabled=true;
+ try{
+  const started=await dailyApi('start',level);
+  if(started.day!==date())throw Error('Date changed');
+  if(started.status!=='in_progress'){closeDialog('dailyConfirmDialog');alert(tr('dailyAlreadyStarted'));rankedLevel=level;show('ranking');return}
+  if(!/^[0-6]{36}$/.test(started.puzzle))throw Error('Invalid puzzle response');
+  const nums=Array.from(started.puzzle,Number);
+  const g={mode:'daily',seed:'online-'+started.day,level,puzzle:nums,solution:null,values:[...nums],notes:Array.from({length:36},()=>[]),elapsed:0,hints:0,day:started.day,target:null,finished:false,dailyOnline:true};
+  state.attempts[key]={startedAt:started.started_at,online:true};current=g;state.active=g;saveState();closeDialog('dailyConfirmDialog');enterGame();
+ }catch(err){console.error('Daily challenge start error',err);alert(rankText(5)+'\n'+(err?.message||''))}
+ finally{remoteDailyBusy=false;$('dailyConfirmStart').disabled=false}
+}
 function initPreview(){const nums=[2,0,5,1,0,6,0,4,0,3,2,0,4,1,0,6,0,3,0,6,2,0,5,1,3,0,4,2,0,5,0,5,1,0,6,4];$('previewGrid').innerHTML=nums.map((n,i)=>`<span class="preview-cell ${n&&i%3?'tint':''}">${n||''}</span>`).join('')}
 function normalizeState(){if(!state||typeof state!=='object')state={};if(!Array.isArray(state.stats))state.stats=[];if(!state.daily||typeof state.daily!=='object')state.daily={};if(!state.attempts||typeof state.attempts!=='object')state.attempts={};if(!state.active||typeof state.active!=='object')state.active=null;}
 function saveState(){if(current&&!current.finished){state.active={...current,notes:current.notes.map(a=>[...a])}}save(STORE,state)}
@@ -123,13 +159,50 @@ function enterGame(){selected=-1;noteMode=false;lastTick=Date.now();$('gameTitle
 function startTimer(){clearInterval(timer);lastTick=Date.now();timer=setInterval(()=>{if(!current||current.finished||$('game').classList.contains('active')===false)return;if(document.visibilityState==='hidden'){lastTick=Date.now();return}const now=Date.now();const seconds=Math.floor((now-lastTick)/1000);if(seconds>0){current.elapsed+=seconds;lastTick+=seconds*1000;$('timer').textContent=format(current.elapsed);if(seconds||current.elapsed%5===0)saveState()}},250)}
 function pauseTimer(){clearInterval(timer);if(current&&!current.finished&&$('game').classList.contains('active')){let now=Date.now(),delta=document.visibilityState==='visible'?Math.floor((now-lastTick)/1000):0;if(delta>0)current.elapsed+=delta;saveState()}}
 function drawBoard(){if(!current)return;const el=$('board');el.replaceChildren();current.values.forEach((num,i)=>{const b=document.createElement('button');b.type='button';b.className='cell';b.setAttribute('role','gridcell');b.setAttribute('aria-label',`R${Math.floor(i/6)+1} C${i%6+1} ${num||'-'}`);if(current.puzzle[i])b.classList.add('fixed');if(i===selected)b.classList.add('selected');else if(selected>=0&&(Math.floor(i/6)===Math.floor(selected/6)||i%6===selected%6))b.classList.add('related');if(num&&E.candidates([...current.values.slice(0,i),0,...current.values.slice(i+1)],i).indexOf(num)<0)b.classList.add('wrong');if(num)b.textContent=num;else if(current.notes[i]?.length){const notes=document.createElement('span');notes.className='notes-grid';for(let n=1;n<=6;n++){const t=document.createElement('span');t.textContent=current.notes[i].includes(n)?n:'';notes.append(t)}b.append(notes)}b.addEventListener('click',()=>{selected=i;drawBoard()});el.append(b)})}
-function enterNumber(n){if(!current||selected<0){$('feedback').textContent=tr('selectCell');return}if(current.puzzle[selected])return;if(noteMode){let vals=new Set(current.notes[selected]);if(vals.has(n))vals.delete(n);else vals.add(n);current.notes[selected]=[...vals].sort();drawBoard();saveState();return}current.values[selected]=n;current.notes[selected]=[];drawBoard();saveState();if(current.values.every((v,i)=>v===current.solution[i]))win()}
+function enterNumber(n){if(!current||selected<0){$('feedback').textContent=tr('selectCell');return}if(current.puzzle[selected])return;if(noteMode){let vals=new Set(current.notes[selected]);if(vals.has(n))vals.delete(n);else vals.add(n);current.notes[selected]=[...vals].sort();drawBoard();saveState();return}current.values[selected]=n;current.notes[selected]=[];drawBoard();saveState();if(current.mode==='daily'&&current.dailyOnline?current.values.every(v=>v>=1)&&E.valid(current.values):current.values.every((v,i)=>v===current.solution[i]))win()}
 function erase(){if(!current||selected<0||current.puzzle[selected])return;current.values[selected]=0;current.notes[selected]=[];$('feedback').textContent='';drawBoard();saveState()}
 function hint(){if(!current)return;if(current.mode==='daily'){$('feedback').textContent=tr('noHintDaily');return}let i=selected;if(i<0||current.values[i]===current.solution[i])i=current.values.findIndex((v,j)=>v!==current.solution[j]);if(i<0)return;current.values[i]=current.solution[i];current.notes[i]=[];current.hints++;current.elapsed+=30;$('timer').textContent=format(current.elapsed);$('feedback').textContent=tr('hintUsed');drawBoard();saveState();if(current.values.every((v,j)=>v===current.solution[j]))win()}
-function win(){clearInterval(timer);current.finished=true;let result={day:date(),mode:current.mode,level:current.level,score:current.elapsed,hints:current.hints,seed:current.seed};state.stats.push(result);state.stats=state.stats.slice(-500);if(current.mode==='daily'){const key=current.day+'|'+current.level;if(!state.daily[key])state.daily[key]=result;if(!state.attempts[key])state.attempts[key]={startedAt:new Date().toISOString()}}state.active=null;save(STORE,state);$('winTime').textContent=format(current.elapsed);$('winDetails').textContent=tr('finishedDetail',{level:tr(current.level),hints:current.hints});let comparison='';if(current.target!==null){comparison=current.elapsed<current.target?tr('winBeat'):current.elapsed>current.target?tr('winLost'):tr('winTie')}$('winCompare').textContent=comparison;openDialog('winDialog')}
+async function win(){
+ if(remoteDailyBusy)return;
+ if(current?.mode==='daily'&&current.dailyOnline){
+  remoteDailyBusy=true;clearInterval(timer);
+  try{
+   const confirmed=await dailyApi('finish',current.level,current.values.join(''));
+   if(confirmed.status!=='completed')throw Error('Unconfirmed result');
+   current.elapsed=Math.ceil(confirmed.elapsed_ms/1000);
+  }catch(err){
+   console.error('Daily challenge finish error',err);
+   alert(rankText(6)+'\n'+(err?.message||''));
+   // Non registrare tempi non confermati e mantieni la partita riprendibile.
+   remoteDailyBusy=false;startTimer();saveState();return;
+  }
+  remoteDailyBusy=false;
+ }
+ clearInterval(timer);current.finished=true;let result={day:date(),mode:current.mode,level:current.level,score:current.elapsed,hints:current.hints,seed:current.seed};state.stats.push(result);state.stats=state.stats.slice(-500);if(current.mode==='daily'){const key=current.day+'|'+current.level;if(!state.daily[key])state.daily[key]=result;if(!state.attempts[key])state.attempts[key]={startedAt:new Date().toISOString()}}state.active=null;save(STORE,state);$('winTime').textContent=format(current.elapsed);$('winDetails').textContent=tr('finishedDetail',{level:tr(current.level),hints:current.hints});let comparison='';if(current.target!==null){comparison=current.elapsed<current.target?tr('winBeat'):current.elapsed>current.target?tr('winLost'):tr('winTie')}$('winCompare').textContent=comparison;openDialog('winDialog')}
 function goHome(){pauseTimer();show('home')}
 function drawStats(){let all=state.stats||[],today=all.filter(s=>s.day===date()),best=all.length?Math.min(...all.map(s=>s.score)):null;$('statWins').textContent=all.length;$('statToday').textContent=today.length;$('statBest').textContent=best===null?'—':format(best);$('statDaily').textContent=all.filter(s=>s.mode==='daily').length}
-function drawRanking(){const key=date()+'|'+rankedLevel,r=state.daily[key];$('rankingDate').textContent=date()+' · UTC';$('rankName').textContent=profile?.name||'—';$('rankCountry').textContent=profile?.country?countryEmoji(profile.country):'';$('rankTime').textContent=r?format(r.score):'—:—';$('ranking').querySelector('.you').classList.toggle('hidden',!r||!profile);$('rankStatus').textContent=r?tr('dailyDoneMsg'):tr(profile?'noDaily':'noProfile');document.querySelectorAll('[data-rank]').forEach(b=>b.classList.toggle('active',b.dataset.rank===rankedLevel))}
+function drawRanking(){const key=date()+'|'+rankedLevel,r=state.daily[key];$('rankingDate').textContent=date()+' · UTC';$('rankName').textContent=profile?.name||'—';$('rankCountry').textContent=profile?.country?countryEmoji(profile.country):'';$('rankTime').textContent=r?format(r.score):'—:—';$('ranking').querySelector('.you').classList.toggle('hidden',!r||!profile);$('rankStatus').textContent=r?tr('dailyDoneMsg'):tr(profile?'noDaily':'noProfile');document.querySelectorAll('[data-rank]').forEach(b=>b.classList.toggle('active',b.dataset.rank===rankedLevel));loadRemoteRanking(rankedLevel)}
+let rankRequest=0;
+async function loadRemoteRanking(chosen){
+ const el=$('onlineRanking');if(!el)return;
+ const request=++rankRequest;
+ el.textContent=rankText(0);
+ if(!profile?.name){el.textContent=rankText(3);return}
+ try{
+  const result=await dailyApi('ranking',chosen);
+  if(request!==rankRequest||chosen!==rankedLevel||!$('ranking').classList.contains('active'))return;
+  el.replaceChildren();
+  if(!result.entries?.length){el.textContent=rankText(1);return}
+  for(const entry of result.entries){
+   const row=document.createElement('div');row.className='online-rank-row'+(entry.you?' online-rank-you':'');
+   const place=document.createElement('span');place.textContent='#'+entry.rank;
+   const name=document.createElement('span');name.textContent=(countryEmoji(entry.country)||'🌍')+' '+entry.name+(entry.you?' · '+tr('you'):'');
+   const score=document.createElement('strong');score.textContent=format(Math.ceil(entry.elapsed_ms/1000));
+   row.append(place,name,score);el.append(row);
+  }
+  const note=document.createElement('p');note.className='small-muted';note.textContent=rankText(4);el.append(note);
+ }catch(err){console.error('Daily ranking error',err);if(request===rankRequest)el.textContent=rankText(2)}
+}
 
 let emailStatusKey='', emailStatusParams={};
 async function refreshEmailUI(){
@@ -225,6 +298,6 @@ async function shareWhatsApp(){
 async function shareNative(){if(!shareData)return;try{if(navigator.share){await navigator.share({title:'6 Sudoku',text:shareData.message});return}}catch(e){if(e.name==='AbortError')return}await copyLink()}
 async function copyLink(){if(!shareData)return;try{await navigator.clipboard.writeText(shareData.url);alert(tr('copied'))}catch(_){window.prompt(tr('copyFail'),shareData.url)}}
 function wire(){LANGS.forEach(([code,name])=>{let opt=document.createElement('option');opt.value=code;opt.textContent=name;$('language').append(opt)});$('language').onchange=e=>changeLanguage(e.target.value);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{level=b.dataset.level;applyTexts();drawDailyFeature()});$('freeBtn').onclick=()=>start('free');$('dailyBtn').onclick=askDaily;$('dailyConfirmStart').onclick=confirmDaily;$('rankingBtn').onclick=()=>show('ranking');$('statsBtn').onclick=()=>show('statsScreen');$('rulesBtn').onclick=$('rulesGameBtn').onclick=()=>{renderRules();openDialog('rulesDialog')};$('shareAppBtn').onclick=()=>openShare(true);$('checkUpdatesBtn').onclick=()=>checkForUpdate(false);$('updateLater').onclick=()=>closeDialog('updateDialog');$('updateNow').onclick=applyUpdate;$('installBtn').onclick=openInstall;document.querySelectorAll('[data-back]').forEach(b=>b.onclick=goHome);$('rankingTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{rankedLevel=b.dataset.rank;drawRanking()});$('editProfileBtn').onclick=()=>{drawProfile();openDialog('profileDialog');window.SudokuPush?.refresh().catch(()=>{})};$('rankDailyBtn').onclick=()=>{level=rankedLevel;applyTexts();start('daily')};$('profileForm').onsubmit=saveProfile;$('linkEmailBtn').onclick=linkProfileEmail;$('recoverEmailBtn').onclick=recoverProfileEmail;$('nickname').addEventListener('input',updatePreview);$('country').addEventListener('change',updatePreview);document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeDialog(b.dataset.close));$('numkeys').innerHTML=Array.from({length:6},(_,i)=>`<button type="button">${i+1}</button>`).join('');$('numkeys').querySelectorAll('button').forEach((b,i)=>b.onclick=()=>enterNumber(i+1));$('eraseBtn').onclick=erase;$('notesBtn').onclick=()=>{noteMode=!noteMode;applyTexts();$('notesBtn').classList.toggle('active',noteMode)};$('hintBtn').onclick=hint;$('stepPrev').onclick=()=>{step=Math.max(0,step-1);drawStep()};$('stepNext').onclick=()=>{if(step===4)closeDialog('installDialog');else{step++;drawStep()}};$('installConfirm').onclick=requestInstall;$('winNew').onclick=()=>{closeDialog('winDialog');start('free')};$('winHome').onclick=()=>{closeDialog('winDialog');show('home')};$('winShare').onclick=()=>{closeDialog('winDialog');openShare(false)};$('whatsappBtn').onclick=shareWhatsApp;$('nativeShareBtn').onclick=shareNative;$('copyLinkBtn').onclick=copyLink;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e});window.addEventListener('appinstalled',()=>{$('installBanner').classList.add('hidden');closeDialog('installDialog')});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')pauseTimer();else if(current&&!current.finished&&$('game').classList.contains('active'))startTimer()});window.addEventListener('pagehide',()=>{pauseTimer();saveState()})}
-function init(){normalizeState();if(window.SudokuOnline?.configured){reconcileOnlineIdentity();window.SudokuOnline.watchAuth(()=>reconcileOnlineIdentity()).catch(()=>{});}initPreview();wire();applyTexts();drawDailyFeature();$('installBanner').classList.toggle('hidden',isInstalled());deepLink=getChallengeParams();if(deepLink?.invalid){alert(tr('invalidLink'))}else if(deepLink){level=deepLink.level;applyTexts();start('challenge')}else if(state.active&&!state.active.finished){const a=state.active;if(a.mode==='daily'&&a.day!==date()){state.active=null;saveState();return}if(a.mode==='daily'&&!isInstalled()){openInstall();return}if(Array.isArray(a.values)&&a.values.length===36&&Array.isArray(a.solution)&&a.solution.length===36){current=a;enterGame()}}initPullRefresh();watchServiceWorker();}
+function init(){normalizeState();if(window.SudokuOnline?.configured){reconcileOnlineIdentity();window.SudokuOnline.watchAuth(()=>reconcileOnlineIdentity()).catch(()=>{});}initPreview();wire();applyTexts();drawDailyFeature();$('installBanner').classList.toggle('hidden',isInstalled());deepLink=getChallengeParams();if(deepLink?.invalid){alert(tr('invalidLink'))}else if(deepLink){level=deepLink.level;applyTexts();start('challenge')}else if(state.active&&!state.active.finished){const a=state.active;if(a.mode==='daily'&&a.day!==date()){state.active=null;saveState();return}if(a.mode==='daily'&&!isInstalled()){openInstall();return}if(Array.isArray(a.values)&&a.values.length===36&&((a.dailyOnline&&a.solution===null)||(Array.isArray(a.solution)&&a.solution.length===36))){current=a;enterGame()}}initPullRefresh();watchServiceWorker();}
 init();
 })();
