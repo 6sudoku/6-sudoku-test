@@ -54,3 +54,8 @@
 .profile-section .btn.secondary{width:100%;margin-top:8px}
 .profile-section input[type=email]{width:100%}
 #emailProtectionStatus{min-height:1.2em;overflow-wrap:anywhere}
+
+/* 6 Sudoku TEST v0.12.7 */
+.push-controls{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.push-controls .btn{width:100%;margin:0}.push-controls .text-button{align-self:center}
+.push-controls .profile-help{margin:4px 0 0;line-height:1.5}
