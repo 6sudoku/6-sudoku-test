@@ -1,20 +1,10 @@
-6 Sudoku v0.12.5 — PRIMA INTEGRAZIONE SUPABASE
+6 Sudoku v0.12.7.2 TEST
 
-NOVITÀ
-- Profilo: nickname, paese, preferenze notifiche (non push reali) e sezione email facoltativa (in preparazione).
-- Connessione Supabase Auth (signInAnonymously) e tabelle profiles / profile_settings del database esistente.
-- CAPTCHA Turnstile sul primo accesso se la site key pubblica è configurata.
-- Otto lingue, quattro difficoltà, partite libere e Sfida quotidiana locale intatte.
+- Mantiene integrazione Supabase, profili, email e Web Push della v0.12.7.1.
+- Condivisione WhatsApp: su Android/iOS usa il foglio di condivisione nativo; scegliere WhatsApp. Non apre più wa.me in una nuova finestra PWA quando il menu nativo è disponibile.
+- Service Worker TEST: gestisce esclusivamente /6-sudoku-test/ e non cancella cache ufficiali.
+- Identità manifest TEST invariata: ./test-pwa. Chiavi e identificativi Supabase invariati.
 
-PER ATTIVARE IL COLLEGAMENTO ONLINE:
-1. Supabase > Project Settings > API Keys: recupera una chiave publishable pubblica (sb_publishable_...).
-2. Cloudflare Turnstile: copia la SITE KEY pubblica del widget 6-sudoku.
-3. Apri js/supabase-config.js e inserisci solo publishableKey e turnstileSiteKey.
-4. Pubblica tutto lo ZIP su GitHub Pages conservando le cartelle.
-5. Prima prova il profilo in una PWA installata. Verifica su Supabase > Authentication > Users e Table Editor.
-6. Attiva la protezione CAPTCHA di Supabase SOLO quando il flusso con Turnstile è stato verificato.
+IMPORTANTE: la v0.12.4 ufficiale ha un Service Worker root che intercetta la sottocartella TEST. La sola pubblicazione di questo ZIP non risolve il problema sui vecchi Android. Prima pubblicare il file di compatibilità ufficiale (ZIP separato) nella root della repository ufficiale, poi aprire l'app ufficiale sul telefono interessato e attendere che si aggiorni. Non cancellare dati Chrome.
 
-NON PUBBLICARE MAI: service_role, secret key, token privati, password del database.
-NOTA: non è ancora disponibile il recupero via email, Web Push, l'invio di sfide online e la classifica mondiale. La sfida quotidiana attuale usa memoria locale.
-Senza publishableKey l'app continua come v0.12.4 con profilo locale.
-La registrazione con CAPTCHA richiede connettività e servizi esterni. Le partite libere restano offline.
+La condivisione nativa si apre come menu di sistema: scegliere WhatsApp e completare l'invio. Verificare il ritorno alla PWA.
