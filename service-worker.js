@@ -1,6 +1,6 @@
 /* 6 Sudoku TEST v0.12.5: cache esclusiva e Service Worker limitato alla sottocartella. */
-const CACHE='6-sudoku-test-v0126-1';
-const FILES=['./','./index.html','./manifest.webmanifest','./css/style.css','./js/sudoku.js','./js/languages.js','./js/app.js','./js/supabase-config.js','./js/supabase-profile.js','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png'];
+const CACHE='6-sudoku-test-v0127-1';
+const FILES=['./','./index.html','./manifest.webmanifest','./css/style.css','./js/sudoku.js','./js/languages.js','./js/app.js','./js/supabase-config.js','./js/supabase-profile.js','./js/push.js','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)));
  // Nessuno skipWaiting automatico: si attiva solo dopo conferma.
@@ -19,4 +19,19 @@ self.addEventListener('fetch',event=>{
   return;
  }
  event.respondWith(caches.match(event.request,{ignoreSearch:true}).then(hit=>hit||fetch(event.request)));
+});
+
+// Notifiche Web Push: mostrare immediatamente l'avviso (richiesto anche da Safari).
+self.addEventListener('push',event=>{
+ let payload={};
+ try{payload=event.data?.json()||{}}catch(_){payload={title:'6 Sudoku',body:event.data?.text()||''}}
+ const title=String(payload.title||'6 Sudoku').slice(0,90);
+ const options={body:String(payload.body||'').slice(0,240),icon:'./assets/icon-192.png',badge:'./assets/icon-192.png',tag:String(payload.tag||'6sudoku-test').slice(0,64),data:{url:new URL('./',self.registration.scope).href}};
+ event.waitUntil(self.registration.showNotification(title,options));
+});
+self.addEventListener('notificationclick',event=>{
+ event.notification.close();
+ const target=new URL('./',self.registration.scope).href;
+ event.waitUntil((async()=>{const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+  const found=clients.find(c=>c.url.startsWith(target));if(found){await found.focus();return;}await self.clients.openWindow(target);})());
 });

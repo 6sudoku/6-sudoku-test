@@ -12,15 +12,16 @@
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./assets/icon-192.png">
 <link rel="stylesheet" href="./css/style.css">
-<title>6 Sudoku TEST · v0.12.6</title>
+<title>6 Sudoku TEST · v0.12.7</title>
 <script src="./js/sudoku.js" defer></script>
 <script src="./js/languages.js" defer></script>
 <script src="./js/supabase-config.js" defer></script>
 <script src="./js/supabase-profile.js" defer></script>
+<script src="./js/push.js" defer></script>
 <script src="./js/app.js" defer></script>
 </head>
 <body>
-<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.6 · Non è la versione ufficiale</div>
+<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.7 · Non è la versione ufficiale</div>
 <header class="topbar">
   <div class="brand"><img src="./assets/icon-192.png" alt="" width="43" height="43"><div><div class="brand-name">6 SUDOKU</div><div class="brand-sub">PLAY · THINK · ENJOY</div></div></div>
   <select id="language" class="lang" aria-label="Lingua"></select>
@@ -66,7 +67,7 @@
 </section>
 <section class="screen" id="statsScreen"><div class="screenbar"><button class="back" data-back="home">← <span data-t="home">Home</span></button></div><h2 class="screen-title" data-t="stats">Le mie statistiche</h2><p class="screen-desc" data-t="statsIntro">I tuoi progressi rimangono sul dispositivo.</p><div class="stat-grid"><div><strong id="statWins">0</strong><small data-t="completed">Schemi completati</small></div><div><strong id="statToday">0</strong><small data-t="today">Completati oggi</small></div><div><strong id="statBest">—</strong><small data-t="best">Tempo migliore</small></div><div><strong id="statDaily">0</strong><small data-t="dailyDone">Sfide quotidiane</small></div></div><p class="small-muted" data-t="statsNote">I dati non si sincronizzano fra dispositivi.</p></section>
 </main>
-<footer><div>6 SUDOKU TEST <strong>v0.12.6</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
+<footer><div>6 SUDOKU TEST <strong>v0.12.7</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
 </div>
 <dialog id="dailyConfirmDialog" class="modal"><div class="modal-body daily-confirm">
  <button class="close" data-close="dailyConfirmDialog" aria-label="Chiudi">×</button>
@@ -81,7 +82,7 @@
 <dialog id="rulesDialog" class="modal"><div class="modal-body"><button class="close" data-close="rulesDialog" aria-label="Chiudi">×</button><h2 data-t="rulesTitle">Come si gioca?</h2><div id="rulesContent"></div><button class="btn primary" data-close="rulesDialog" data-t="understood">Ho capito</button></div></dialog>
 <dialog id="installDialog" class="modal"><div class="modal-body"><button class="close" data-close="installDialog" aria-label="Chiudi">×</button><div class="modal-emblem">📲</div><h2 data-t="installTitle">Installa 6 Sudoku</h2><p class="modal-intro" data-t="dailyRequiresApp">La Sfida quotidiana è disponibile aprendo l'app installata.</p><div id="installSteps"><div class="illustration" id="stepIllustration"></div><div class="steps-count" id="stepCount"></div><h3 id="stepTitle"></h3><p id="stepBody"></p><div class="steps-controls"><button id="stepPrev" class="btn secondary" data-t="prev">Indietro</button><button id="stepNext" class="btn primary" data-t="next">Avanti</button></div></div><div id="androidInstall" class="hidden"><p data-t="androidHelp">Utilizza il menu del browser e scegli Installa app o Aggiungi alla schermata Home.</p><button class="btn primary" id="installConfirm" data-t="installButton">Installa</button></div></div></dialog>
 <dialog id="profileDialog" class="modal"><div class="modal-body"><button class="close" data-close="profileDialog" aria-label="Chiudi">×</button><div class="modal-emblem">👤</div><h2 data-t="profileTitle">Il tuo nome di gioco</h2><p class="modal-intro" data-t="profileInfo">Scegli un nickname per la Sfida quotidiana. Il Paese è facoltativo.</p><form id="profileForm"><label for="nickname" data-t="nickname">Nickname</label><input id="nickname" maxlength="20" minlength="2" autocomplete="nickname" required placeholder="Nickname"><label for="country" data-t="country">Paese (facoltativo)</label><select id="country"></select><div class="profile-preview"><span data-t="preview">Anteprima</span><strong id="namePreview">—</strong></div>
-<div class="profile-section"><div class="profile-section-title" data-t="profileNotifs">3. Notifiche</div><label class="profile-check"><input type="checkbox" id="profileNotif" checked><span data-t="profileNotifsDesc">Inviti, risultati e promemoria giornalieri. Le notifiche push richiederanno il permesso del dispositivo.</span></label></div>
+<div class="profile-section"><div class="profile-section-title" data-t="profileNotifs">3. Notifiche<div class="push-controls"><button type="button" class="btn secondary" id="pushEnableBtn" data-t="pushEnable">Attiva notifiche sul dispositivo</button><button type="button" class="btn secondary hidden" id="pushTestBtn" data-t="pushTest">Invia notifica di prova</button><button type="button" class="text-button hidden" id="pushDisableBtn" data-t="pushDisable">Disattiva su questo dispositivo</button><p id="pushStatus" class="profile-help" role="status" aria-live="polite"></p></div></div><label class="profile-check"><input type="checkbox" id="profileNotif" checked><span data-t="profileNotifsDesc">Inviti, risultati e promemoria giornalieri. Le notifiche push richiederanno il permesso del dispositivo.</span></label><div class="push-controls"><button type="button" class="btn secondary" id="pushEnableBtn" data-t="pushEnable">Attiva notifiche sul dispositivo</button><button type="button" class="btn secondary hidden" id="pushTestBtn" data-t="pushTest">Invia notifica di prova</button><button type="button" class="text-button hidden" id="pushDisableBtn" data-t="pushDisable">Disattiva su questo dispositivo</button><p id="pushStatus" class="profile-help" role="status" aria-live="polite"></p></div></div>
 <div class="profile-section"><div class="profile-section-title" data-t="profileProtect">4. Proteggi il tuo profilo</div>
 <label for="profileEmail" data-t="profileEmail">Email (facoltativa)</label><input type="email" id="profileEmail" autocomplete="email" placeholder="nome@esempio.it">
 <p class="profile-help" data-t="profileEmailHelp">Associa un'email per recuperare il profilo quando cambi dispositivo. Non è obbligatoria.</p>
