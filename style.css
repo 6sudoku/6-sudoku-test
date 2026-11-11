@@ -67,7 +67,7 @@
 .online-rank-row strong{text-align:right;font-variant-numeric:tabular-nums}
 .online-rank-you{background:#eaf5ec;border-radius:8px;font-weight:700}
 
-/* v0.12.8.1: classifica compatta e posizione personale */
+/* v0.12.8.2: classifica compatta e posizione personale */
 .ranking-count{text-align:center;font-weight:650;color:#50745b;margin:14px 0 10px;font-size:.89rem}
 .ranking-group-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;color:#697b6f;font-weight:750;margin:15px 0 8px}
 .ranking-self-title{margin-top:23px;padding-top:14px;border-top:1px dashed #bacac0}
