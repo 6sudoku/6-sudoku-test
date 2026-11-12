@@ -87,3 +87,14 @@
 
 /* v0.12.8.5: privacy quick guide, mobile friendly. */
 .privacy-link{display:block;margin:12px auto 0;text-align:center;min-height:36px}.privacy-modal{max-width:520px}.privacy-items{display:grid;gap:12px;text-align:left}.privacy-items section{padding:11px 12px;background:#f4f8f4;border-radius:12px}.privacy-items h3{margin:0 0 5px;font-size:.91rem;color:#365e40}.privacy-items p{margin:0;font-size:.82rem;line-height:1.5;color:#586c5e}.privacy-pending{font-size:.78rem;color:#875a21;background:#fff5df;padding:12px;border-radius:10px;line-height:1.45}.privacy-request{display:block;text-align:center;text-decoration:none;white-space:normal;line-height:1.4;padding:12px}.privacy-modal>.btn.primary{width:100%;margin-top:10px}
+
+/* 0.12.8.6 – cancellazione profilo TEST */
+.delete-profile-section{margin-top:14px;padding:14px 12px;border:1px solid #e2d5d5;border-radius:12px;text-align:left}
+.delete-profile-section h3{color:#99403b;margin:0 0 7px;font-size:.96rem}
+.delete-profile-section p{font-size:.83rem;line-height:1.5;margin:5px 0 8px}
+.delete-profile-open{width:100%;margin-top:6px}
+.delete-profile-modal .delete-profile-check{display:flex;gap:10px;align-items:flex-start;padding:12px;background:#f6f7f5;border-radius:10px;text-align:left;font-size:.9rem;line-height:1.5}
+.delete-profile-check input{margin-top:4px;flex:none;width:20px;height:20px}
+.delete-profile-modal .btn{width:100%;margin-top:10px}
+.delete-profile-modal .btn.danger{background:#a43f39;color:white;border-color:#a43f39}
+.delete-profile-modal .btn.danger:disabled{opacity:.4;cursor:not-allowed}
