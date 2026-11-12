@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./assets/icon-192.png">
 <link rel="stylesheet" href="./css/style.css">
-<title>6 Sudoku TEST · v0.12.8.2</title>
+<title>6 Sudoku TEST · v0.12.8.3</title>
 <script src="./js/sudoku.js" defer></script>
 <script src="./js/languages.js" defer></script>
 <script src="./js/supabase-config.js" defer></script>
@@ -21,7 +21,7 @@
 <script src="./js/app.js" defer></script>
 </head>
 <body>
-<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.8.2 · Non è la versione ufficiale</div>
+<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.8.3 · Non è la versione ufficiale</div>
 <header class="topbar">
   <div class="brand"><img src="./assets/icon-192.png" alt="" width="43" height="43"><div><div class="brand-name">6 SUDOKU</div><div class="brand-sub">PLAY · THINK · ENJOY</div></div></div>
   <select id="language" class="lang" aria-label="Lingua"></select>
@@ -69,7 +69,7 @@
 </section>
 <section class="screen" id="statsScreen"><div class="screenbar"><button class="back" data-back="home">← <span data-t="home">Home</span></button></div><h2 class="screen-title" data-t="stats">Le mie statistiche</h2><p class="screen-desc" data-t="statsIntro">I tuoi progressi rimangono sul dispositivo.</p><div class="stat-grid"><div><strong id="statWins">0</strong><small data-t="completed">Schemi completati</small></div><div><strong id="statToday">0</strong><small data-t="today">Completati oggi</small></div><div><strong id="statBest">—</strong><small data-t="best">Tempo migliore</small></div><div><strong id="statDaily">0</strong><small data-t="dailyDone">Sfide quotidiane</small></div></div><p class="small-muted" data-t="statsNote">I dati non si sincronizzano fra dispositivi.</p></section>
 </main>
-<footer><div>6 SUDOKU TEST <strong>v0.12.8.2</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
+<footer><div>6 SUDOKU TEST <strong>v0.12.8.3</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
 </div>
 <dialog id="dailyConfirmDialog" class="modal"><div class="modal-body daily-confirm">
  <button class="close" data-close="dailyConfirmDialog" aria-label="Chiudi">×</button>
@@ -106,7 +106,7 @@
 <button class="btn primary" id="saveProfileBtn" type="submit" data-t="saveProfile">Salva e continua</button></form></div></dialog>
 <dialog id="winDialog" class="modal"><div class="modal-body win-modal"><div class="confetti-icon">🏆</div><div class="overline" data-t="completedTitle">SCHEMA COMPLETATO</div><h2 data-t="congrats">Complimenti!</h2><div class="final-time" id="winTime">00:00</div><p id="winDetails"></p><p class="feedback" id="winCompare"></p><button class="btn primary hidden" id="winRanking">Visualizza classifica mondiale</button><button class="btn secondary" id="winShare">🔥 Lancia la sfida!</button><button class="btn secondary" id="winNew" data-t="newGame">Nuova partita</button><button class="text-button" id="winHome" data-t="home">Home</button></div></dialog>
 <dialog id="dailyAlreadyDialog" class="modal"><div class="modal-body win-modal"><div class="confetti-icon">🏆</div><h2 id="dailyAlreadyTitle">Sfida già completata!</h2><p id="dailyAlreadyBody" class="modal-intro"></p><div class="final-time" id="dailyAlreadyTime">—:—</div><button type="button" class="btn primary" id="dailyAlreadyRanking">Visualizza classifica mondiale</button><button type="button" class="btn secondary" id="dailyAlreadyShare">🔥 Lancia la sfida!</button><button type="button" class="text-button" id="dailyAlreadyHome" data-t="home">Home</button></div></dialog>
-<dialog id="dailyInviteDialog" class="modal"><div class="modal-body win-modal"><div class="confetti-icon">🔥</div><h2 id="inviteTitle">Ti hanno lanciato una sfida!</h2><p class="modal-intro" id="inviteBody"></p><div id="iosInviteHandoff" class="hidden"><strong id="iosInviteQuestion"></strong><p class="modal-intro" id="iosInviteHelp"></p><button type="button" class="btn primary" id="iosInviteCopy"></button><p class="profile-help" id="iosInviteNew"></p></div><button type="button" class="btn primary" id="inviteStart">Partecipa alla sfida</button><button type="button" class="btn secondary" id="inviteHome" data-t="home">Home</button></div></dialog>
+<dialog id="dailyInviteDialog" class="modal"><div class="modal-body win-modal"><div class="confetti-icon">🔥</div><h2 id="inviteTitle">Ti hanno lanciato una sfida!</h2><p class="modal-intro" id="inviteBody"></p><div id="iosInviteHandoff" class="hidden"><strong id="iosInviteQuestion"></strong><div class="ios-invite-steps"><div class="ios-step"><span class="ios-step-n">1</span><span id="iosStepOne"></span></div><div class="ios-step"><span class="ios-step-n">2</span><img src="./assets/icon-192.png" width="45" height="45" alt="6 Sudoku" class="ios-app-icon"><span id="iosStepTwo"></span></div><div class="ios-step"><span class="ios-step-n">3</span><span id="iosStepThree"></span></div></div><p class="modal-intro hidden" id="iosInviteHelp"></p><button type="button" class="btn primary" id="iosInviteCopy"></button><p class="profile-help" id="iosInviteNew"></p></div><button type="button" class="btn primary" id="inviteStart">Partecipa alla sfida</button><button type="button" class="btn secondary" id="inviteHome" data-t="inviteBrowserHome">Torna al gioco nel browser</button></div></dialog>
 <dialog id="shareDialog" class="modal"><div class="modal-body"><button class="close" data-close="shareDialog" aria-label="Chiudi">×</button><h2 data-t="shareTitle">Condividi 6 Sudoku</h2><p data-t="shareDesc">Invia il link a un amico.</p><button class="btn primary" id="whatsappBtn" data-t="whatsapp">Invia su WhatsApp</button><button class="btn secondary" id="nativeShareBtn" data-t="shareMenu">Altri social</button><button class="btn secondary" id="copyLinkBtn" data-t="copyLink">Copia link</button></div></dialog>
 </body>
 </html>
