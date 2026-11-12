@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id), E=window.SudokuEngine;
-const APP_VERSION='0.12.8.2', VERSION_URL='./version.json';
+const APP_VERSION='0.12.8.3', VERSION_URL='./version.json';
 const STORE='6sudoku-test-v012-state', LANGKEY='6sudoku-test-lang', PROFILEKEY='6sudoku-test-profile';
 const LEVELS=['beginner','intermediate','advanced','hero'];
 const LEVEL_LABELS={beginner:'🌱 ZEN',intermediate:'⚡ FOCUS',advanced:'💪 MASTER',hero:'👑 HERO'};
@@ -118,7 +118,7 @@ function initPullRefresh(){
 }
 
 const tr=(k,params={})=>{let s=window.I18N[lang]?.[k]??window.I18N.it[k]??k;return s.replace(/\{(\w+)\}/g,(_,key)=>params[key]??'')};
-function changeLanguage(next){if(!window.I18N[next])return;lang=next;save(LANGKEY,lang);applyTexts();if(current){$('gameTitle').textContent=gameTitle();drawBoard();}if($('ranking').classList.contains('active'))drawRanking();if($('rulesDialog').open)renderRules();if($('installDialog').open)drawStep();if($('profileDialog').open){drawProfile();if(emailStatusKey)showEmailStatus(emailStatusKey,emailStatusParams)}if($('dailyInviteDialog').open&&isIOSBrowser()){for(const id of ['iosInviteHelp','iosInviteQuestion','iosInviteCopy','iosInviteNew'])$(id).textContent=tr(id)}drawDailyFeature();if($('dailyConfirmDialog').open)drawDailyConfirm();if($('updateDialog').open&&pendingVersion)$('updateDescription').textContent=tr('updateDescription',{version:pendingVersion});if($('updateFeedback').textContent)updateFeedback(pendingVersion?'updateReady':'')}
+function changeLanguage(next){if(!window.I18N[next])return;const unsavedCountry=$('profileDialog').open?$('country').value:null;lang=next;save(LANGKEY,lang);applyTexts();if(current){$('gameTitle').textContent=gameTitle();drawBoard();}if($('ranking').classList.contains('active'))drawRanking();if($('rulesDialog').open)renderRules();if($('installDialog').open)drawStep();if($('profileDialog').open){drawProfile();if(unsavedCountry!==null){$('country').value=unsavedCountry;updatePreview()}if(emailStatusKey)showEmailStatus(emailStatusKey,emailStatusParams)}if($('dailyInviteDialog').open&&isIOSBrowser()){for(const id of ['iosInviteHelp','iosInviteQuestion','iosInviteCopy','iosInviteNew','iosStepOne','iosStepTwo','iosStepThree'])$(id).textContent=tr(id)}drawDailyFeature();if($('dailyConfirmDialog').open)drawDailyConfirm();if($('updateDialog').open&&pendingVersion)$('updateDescription').textContent=tr('updateDescription',{version:pendingVersion});if($('updateFeedback').textContent)updateFeedback(pendingVersion?'updateReady':'')}
 function applyTexts(){document.documentElement.lang=lang;$('language').value=lang;document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=tr(el.dataset.t)});$('notesBtn').textContent=tr(noteMode?'notesOn':'notesOff');document.querySelectorAll('[data-level]').forEach(el=>{const node=el.querySelector('.level-copy strong');if(node)node.textContent=levelLabel(el.dataset.level)});document.querySelectorAll('[data-rank]').forEach(el=>{el.textContent=levelLabel(el.dataset.rank)});$('dailyConfirmLevel').textContent=levelLabel(level);$('rankShareBtn').textContent=ui('launch');$('winShare').textContent=current?.mode==='daily'?ui('launch'):tr('challengeFriend');$('winRanking').textContent=ui('viewRank');$('dailyAlreadyShare').textContent=ui('launch');$('dailyAlreadyRanking').textContent=ui('viewRank');$('inviteStart').textContent=ui('joinChallenge');document.querySelectorAll('[data-level]').forEach(el=>el.classList.toggle('active',el.dataset.level===level));document.querySelectorAll('[data-rank]').forEach(el=>el.classList.toggle('active',el.dataset.rank===rankedLevel));}
 function show(id){if(id==='home'){drawDailyFeature();setTimeout(showUpdateIfReady,0)}document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el.id===id));window.scrollTo?.(0,0);if(id==='ranking')drawRanking();if(id==='statsScreen')drawStats()}
 function openDialog(id){if(!$(id).open)$(id).showModal()}
@@ -293,7 +293,7 @@ function showDailyInvitation(){
  $('iosInviteHelp').textContent=tr('iosInviteHelp');
  $('iosInviteQuestion').textContent=tr('iosInviteQuestion');
  $('iosInviteCopy').textContent=tr('iosInviteCopy');
- $('iosInviteNew').textContent=tr('iosInviteNew');
+ $('iosInviteNew').textContent=tr('iosInviteNew');for(const id of ['iosStepOne','iosStepTwo','iosStepThree'])$(id).textContent=tr(id);
  pendingInviteLink=location.href;
  openDialog('dailyInviteDialog');
  history.replaceState(null,'',new URL('./',location.href).pathname);
@@ -352,7 +352,7 @@ async function reconcileOnlineIdentity(){
  }catch(_){/* Il gioco libero resta disponibile anche quando Supabase è offline. */}
 }
 
-function drawProfile(){refreshEmailUI();if($('profileNotif'))$('profileNotif').checked=read('6sudoku-test-notifications',true);refreshProfileConnection();const el=$('country');el.replaceChildren();const none=document.createElement('option');none.value='';none.textContent='🌍 '+tr('countryNone');el.append(none);const names=typeof Intl.DisplayNames==='function'?new Intl.DisplayNames([lang],{type:'region'}):null;const countries=(window.COUNTRIES||[]).filter(item=>item[0]).map(([code,emoji])=>({code,emoji,name:names?.of(code)||code})).sort((a,b)=>a.name.localeCompare(b.name,lang));for(const {code,emoji,name} of countries){const o=document.createElement('option');o.value=code;o.textContent=emoji+' '+name;el.append(o)}$('nickname').value=profile?.name||'';$('country').value=profile?.country||'';updatePreview()}
+function drawProfile(){refreshEmailUI();if($('profileNotif'))$('profileNotif').checked=read('6sudoku-test-notifications',true);refreshProfileConnection();const el=$('country');el.replaceChildren();const none=document.createElement('option');none.value='';none.textContent='🌍 '+tr('countryNone');el.append(none);const names=typeof Intl.DisplayNames==='function'?new Intl.DisplayNames([lang],{type:'region'}):null;const sorter=new Intl.Collator(lang,{usage:'sort',sensitivity:'base',numeric:true});const countries=(window.COUNTRIES||[]).filter(item=>item[0]).map(([code,emoji])=>({code,emoji,name:names?.of(code)||code})).sort((a,b)=>sorter.compare(a.name,b.name)||a.code.localeCompare(b.code));for(const {code,emoji,name} of countries){const o=document.createElement('option');o.value=code;o.textContent=emoji+' '+name;el.append(o)}$('nickname').value=profile?.name||'';$('country').value=profile?.country||'';updatePreview()}
 function updatePreview(){let name=$('nickname').value.trim()||'—',country=$('country').value;$('namePreview').textContent=name+' '+(country?countryEmoji(country):'')}
 function refreshProfileConnection(message){const el=$('profileConnection');if(!el)return;const online=window.SudokuOnline;el.textContent=message||tr(!online?.configured?'profileLocalOnly':online.connected?'profileConnected':'profileReady');}
 async function saveProfile(event){event.preventDefault();const name=$('nickname').value.trim();if(name.length<2||name.length>20){alert(tr('chooseNickname'));return}
