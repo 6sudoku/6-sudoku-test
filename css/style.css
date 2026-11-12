@@ -84,3 +84,6 @@
 .received-invite-btn{display:block;width:100%;margin-top:12px;min-height:48px;text-align:center}
 .received-invite-btn.hidden{display:none}
 .home-links .text-button{white-space:normal;line-height:1.4}
+
+/* v0.12.8.5: privacy quick guide, mobile friendly. */
+.privacy-link{display:block;margin:12px auto 0;text-align:center;min-height:36px}.privacy-modal{max-width:520px}.privacy-items{display:grid;gap:12px;text-align:left}.privacy-items section{padding:11px 12px;background:#f4f8f4;border-radius:12px}.privacy-items h3{margin:0 0 5px;font-size:.91rem;color:#365e40}.privacy-items p{margin:0;font-size:.82rem;line-height:1.5;color:#586c5e}.privacy-pending{font-size:.78rem;color:#875a21;background:#fff5df;padding:12px;border-radius:10px;line-height:1.45}.privacy-request{display:block;text-align:center;text-decoration:none;white-space:normal;line-height:1.4;padding:12px}.privacy-modal>.btn.primary{width:100%;margin-top:10px}
