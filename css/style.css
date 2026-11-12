@@ -73,3 +73,9 @@
 .ranking-self-title{margin-top:23px;padding-top:14px;border-top:1px dashed #bacac0}
 #rankShareBtn{margin-top:13px;width:100%}
 #dailyAlreadyDialog .final-time{font-size:2rem;margin:.6rem auto 1rem}
+
+/* 0.12.8.3: istruzioni leggibili su iPhone, vera icona dell'app. */
+.ios-invite-steps{display:grid;gap:10px;text-align:left;margin:17px 0 10px}
+.ios-step{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#f4f8f4;border-radius:12px;min-height:56px;font-size:13px;line-height:1.45}
+.ios-step-n{display:grid;place-items:center;flex:0 0 27px;width:27px;height:27px;border-radius:50%;background:#50785c;color:white;font-weight:800}
+.ios-app-icon{border-radius:12px;flex:none;object-fit:cover}
