@@ -79,3 +79,8 @@
 .ios-step{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#f4f8f4;border-radius:12px;min-height:56px;font-size:13px;line-height:1.45}
 .ios-step-n{display:grid;place-items:center;flex:0 0 27px;width:27px;height:27px;border-radius:50%;background:#50785c;color:white;font-weight:800}
 .ios-app-icon{border-radius:12px;flex:none;object-fit:cover}
+
+/* v0.12.8.4: invito ricevuto ben visibile su ogni schermo */
+.received-invite-btn{display:block;width:100%;margin-top:12px;min-height:48px;text-align:center}
+.received-invite-btn.hidden{display:none}
+.home-links .text-button{white-space:normal;line-height:1.4}
