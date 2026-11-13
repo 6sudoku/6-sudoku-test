@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id), E=window.SudokuEngine;
-const APP_VERSION='0.12.8.7', VERSION_URL='./version.json';
+const APP_VERSION='0.12.8.8', VERSION_URL='./version.json';
 const STORE='6sudoku-test-v012-state', LANGKEY='6sudoku-test-lang', PROFILEKEY='6sudoku-test-profile';
 const LEVELS=['beginner','intermediate','advanced','hero'];
 const LEVEL_LABELS={beginner:'🌱 ZEN',intermediate:'⚡ FOCUS',advanced:'💪 MASTER',hero:'👑 HERO'};
@@ -356,7 +356,7 @@ async function reconcileOnlineIdentity(){
  }catch(_){/* Il gioco libero resta disponibile anche quando Supabase è offline. */}
 }
 
-function drawProfile(){refreshEmailUI();if($('profileNotif'))$('profileNotif').checked=read('6sudoku-test-notifications',true);refreshProfileConnection();const el=$('country');el.replaceChildren();const none=document.createElement('option');none.value='';none.textContent='🌍 '+tr('countryNone');el.append(none);const names=typeof Intl.DisplayNames==='function'?new Intl.DisplayNames([lang],{type:'region'}):null;const sorter=new Intl.Collator(lang,{usage:'sort',sensitivity:'base',numeric:true});const countries=(window.COUNTRIES||[]).filter(item=>item[0]).map(([code,emoji])=>({code,emoji,name:names?.of(code)||code})).sort((a,b)=>sorter.compare(a.name,b.name)||a.code.localeCompare(b.code));for(const {code,emoji,name} of countries){const o=document.createElement('option');o.value=code;o.textContent=emoji+' '+name;el.append(o)}$('nickname').value=profile?.name||'';$('country').value=profile?.country||'';updatePreview()}
+function drawProfile(){refreshEmailUI();if($('profileNotif'))$('profileNotif').checked=read('6sudoku-test-notifications',true);refreshProfileConnection();window.SudokuReminderPrefs?.refresh();const el=$('country');el.replaceChildren();const none=document.createElement('option');none.value='';none.textContent='🌍 '+tr('countryNone');el.append(none);const names=typeof Intl.DisplayNames==='function'?new Intl.DisplayNames([lang],{type:'region'}):null;const sorter=new Intl.Collator(lang,{usage:'sort',sensitivity:'base',numeric:true});const countries=(window.COUNTRIES||[]).filter(item=>item[0]).map(([code,emoji])=>({code,emoji,name:names?.of(code)||code})).sort((a,b)=>sorter.compare(a.name,b.name)||a.code.localeCompare(b.code));for(const {code,emoji,name} of countries){const o=document.createElement('option');o.value=code;o.textContent=emoji+' '+name;el.append(o)}$('nickname').value=profile?.name||'';$('country').value=profile?.country||'';updatePreview()}
 function updatePreview(){let name=$('nickname').value.trim()||'—',country=$('country').value;$('namePreview').textContent=name+' '+(country?countryEmoji(country):'')}
 function refreshProfileConnection(message){const el=$('profileConnection');if(!el)return;const online=window.SudokuOnline;el.textContent=message||tr(!online?.configured?'profileLocalOnly':online.connected?'profileConnected':'profileReady');}
 async function saveProfile(event){event.preventDefault();const name=$('nickname').value.trim();if(name.length<2||name.length>20){alert(tr('chooseNickname'));return}
@@ -366,7 +366,7 @@ async function saveProfile(event){event.preventDefault();const name=$('nickname'
  try{if(window.SudokuOnline?.configured){refreshProfileConnection(tr('profileConnecting'));const result=await window.SudokuOnline.saveProfile({name,country,language:lang,notify});onlineId=result.userId;}}
  catch(err){btn.disabled=false;refreshProfileConnection(tr('profileSyncFailed')+(err?.message?' ('+err.message+')':''));return}
  finally{btn.disabled=false}
- profile={id:onlineId||profile?.id||'p-'+newSeed(),name,country};save(PROFILEKEY,profile);closeDialog('profileDialog');drawRanking();if(pendingDaily){pendingDaily=false;askDaily()}}
+ profile={id:onlineId||profile?.id||'p-'+newSeed(),name,country};save(PROFILEKEY,profile);closeDialog('profileDialog');window.SudokuReminderPrefs?.refresh();drawRanking();if(pendingDaily){pendingDaily=false;askDaily()}}
 function renderRules(){const box=$('rulesContent');box.replaceChildren();(window.RULES[lang]||window.RULES.it).forEach(([title,body],i)=>{const section=document.createElement('section');section.className='rules-section';const h=document.createElement('h3');h.textContent=(i+1)+'. '+title;const p=document.createElement('p');p.textContent=body;section.append(h,p);box.append(section)})}
 function openInstall(){if(isInstalled())return;$('installSteps').classList.remove('hidden');$('androidInstall').classList.add('hidden');if(!/iPad|iPhone|iPod/.test(navigator.userAgent)){if(installEvent||/Android/i.test(navigator.userAgent)){$('installSteps').classList.add('hidden');$('androidInstall').classList.remove('hidden')}}drawStep();openDialog('installDialog')}
 function drawStep(){const icons=['🌐','📤','➕','📲','🧩'];$('stepIllustration').textContent=icons[step];$('stepCount').textContent=tr('stepOf',{current:step+1});$('stepTitle').textContent=tr('stepTitle'+(step+1));$('stepBody').textContent=tr('stepBody'+(step+1));$('stepPrev').disabled=step===0;$('stepNext').textContent=step===4?tr('understood'):tr('next')}

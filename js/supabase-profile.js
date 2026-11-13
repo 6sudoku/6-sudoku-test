@@ -40,7 +40,7 @@
   const result=existing?await db.from('profiles').update(payload).eq('user_id',uid):await db.from('profiles').insert({user_id:uid,...payload});
   if(result.error)throw result.error;
   const {data:existingSettings,error:settingError}=await db.from('profile_settings').select('user_id').eq('user_id',uid).maybeSingle();if(settingError)throw settingError;
-  const prefs={language_code:language,notify_invites:notify,notify_results:notify,notify_rematches:notify,notify_daily:notify,notify_important:notify};
+  const prefs={language_code:language,notify_invites:notify,notify_results:notify,notify_rematches:notify,notify_important:notify};
   const r2=existingSettings?await db.from('profile_settings').update(prefs).eq('user_id',uid):await db.from('profile_settings').insert({user_id:uid,...prefs});
   if(r2.error)throw r2.error;
   return {userId:uid};
