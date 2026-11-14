@@ -118,3 +118,8 @@
 .vs1-score-pair > div {padding:12px 8px;background:rgba(147,113,183,.13);border-radius:12px;display:flex;flex-direction:column;gap:5px}
 .vs1-score-pair strong {font-size:1.65rem;font-variant-numeric:tabular-nums}
 .vs1-score-pair small {overflow-wrap:anywhere}
+
+/* 0.12.9.3: link is selectable without cropping words; final result text. */
+.vs1-link-wrap input{font-size:12px;direction:ltr;text-align:left;min-width:0;box-sizing:border-box;}
+.vs1-result-story{font-weight:600;line-height:1.5;margin:14px 0 8px;}
+#vs1ResultStake:empty{display:none;}
