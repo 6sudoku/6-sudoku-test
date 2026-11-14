@@ -130,3 +130,8 @@
 .vs1-countdown strong{font-size:32px;letter-spacing:.05em;font-variant-numeric:tabular-nums}
 #vs1CancelInvite{border-color:#b64c55;color:#9d3443;background:#fff;margin-top:6px}
 #vs1CancelInvite:disabled{opacity:.5}
+
+/* 1 VS 1: stato dell'avversario e risultato del creatore */
+.vs1-status-note{border-radius:13px;background:#eee9f5;color:#573977;border:1px solid #ccb9e3;padding:15px;font-size:15px;font-weight:800;margin:14px 0;text-align:center}
+.vs1-completed-panel{border-radius:15px;background:#f7f3fb;border:1px solid #ccb9e3;padding:15px 12px;margin:14px 0;text-align:center}
+.vs1-completed-panel h3{color:#573977;margin:3px 0 8px}
