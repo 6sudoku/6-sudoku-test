@@ -1,5 +1,5 @@
-6 Sudoku v0.12.9.0 TEST — creator 1 VS 1
-Avvia e conclude il Sudoku sul server; verifica il tempo ufficiale.
-NON condivide ancora link: la parte destinatario non è stata rilasciata.
-Al momento le opzioni Chi perde paga e notifica si scelgono prima di giocare, per non falsare il cronometro server.
-Non installare nel sito ufficiale.
+6 Sudoku TEST v0.12.9.1
+- Pulsante Sfida 1 VS 1 color HERO lilla
+- Livello difficoltà visibile durante la sfida e nel risultato creatore
+- Pulizia messaggio di controllo del server a partita registrata
+- Gli inviti 1 VS 1 non sono ancora condivisibili: occorre completare e testare il backend destinatario prima di mostrare un link.
