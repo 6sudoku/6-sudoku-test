@@ -1,5 +1,5 @@
-/* 6 Sudoku TEST v0.12.9.4: cache isolate e navigazione limitata alla sottocartella TEST. */
-const CACHE='6-sudoku-test-v0129-4';
+/* 6 Sudoku TEST v0.12.9.5: cache isolate e navigazione limitata alla sottocartella TEST. */
+const CACHE='6-sudoku-test-v0129-5';
 const FILES=['./','./index.html','./manifest.webmanifest','./css/style.css','./js/sudoku.js','./js/languages.js','./js/app.js','./js/supabase-config.js','./js/supabase-profile.js','./js/push.js','./js/daily-reminder.js','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png'];
 const SCOPE=new URL(self.registration.scope);
 self.addEventListener('install',event=>{
@@ -27,12 +27,12 @@ self.addEventListener('push',event=>{
  let payload={};
  try{payload=event.data?.json()||{}}catch(_){payload={title:'6 Sudoku',body:event.data?.text()||''}}
  const title=String(payload.title||'6 Sudoku').slice(0,90);
- const options={body:String(payload.body||'').slice(0,240),icon:'./assets/icon-192.png',badge:'./assets/icon-192.png',tag:String(payload.tag||'6sudoku-test').slice(0,64),data:{url:new URL('./',self.registration.scope).href}};
+ const options={body:String(payload.body||'').slice(0,240),icon:'./assets/icon-192.png',badge:'./assets/icon-192.png',tag:String(payload.tag||'6sudoku-test').slice(0,64),data:{url:new URL(String(payload.tag||'').startsWith('6sudoku-1vs1-')?'./?vs1=result':'./',self.registration.scope).href}};
  event.waitUntil(self.registration.showNotification(title,options));
 });
 self.addEventListener('notificationclick',event=>{
  event.notification.close();
- const target=new URL('./',self.registration.scope).href;
+ const target=event.notification.data?.url||new URL('./',self.registration.scope).href;
  event.waitUntil((async()=>{const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-  const found=clients.find(c=>c.url.startsWith(target));if(found){await found.focus();return;}await self.clients.openWindow(target);})());
+  const found=clients.find(c=>c.url.startsWith(self.registration.scope));if(found){await found.focus();if(target.includes('vs1=result')&&'navigate' in found)await found.navigate(target);return;}await self.clients.openWindow(target);})());
 });
