@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./assets/icon-192.png">
 <link rel="stylesheet" href="./css/style.css">
-<title>6 Sudoku TEST · v0.12.9.1</title>
+<title>6 Sudoku TEST · v0.12.9.2</title>
 <script src="./js/sudoku.js" defer></script>
 <script src="./js/languages.js" defer></script>
 <script src="./js/supabase-config.js" defer></script>
@@ -22,7 +22,7 @@
 <script src="./js/app.js" defer></script>
 </head>
 <body>
-<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.9.1 · Non è la versione ufficiale</div>
+<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.9.2 · Non è la versione ufficiale</div>
 <header class="topbar">
   <div class="brand"><img src="./assets/icon-192.png" alt="" width="43" height="43"><div><div class="brand-name">6 SUDOKU</div><div class="brand-sub">PLAY · THINK · ENJOY</div></div></div>
   <select id="language" class="lang" aria-label="Lingua"></select>
@@ -47,7 +47,7 @@
  <div class="install-banner" id="installBanner"><img src="./assets/icon-192.png" width="43" height="43" alt=""><div><strong data-t="install">Installa 6 Sudoku</strong><small data-t="installDesc">Installa l'app per giocare più comodamente.</small></div><button id="installBtn" class="btn primary compact" data-t="installButton">Installa</button></div>
  <div class="update-controls"><button type="button" id="checkUpdatesBtn" class="text-button update-check" data-t="checkUpdates">↻ Controlla aggiornamenti</button><span id="updateFeedback" class="update-feedback" role="status" aria-live="polite"></span></div>
  <div class="home-links"><button class="text-button" id="rulesBtn" data-t="rules">❓ Come si gioca?</button><button class="text-button" id="statsBtn" data-t="stats">📊 Le mie statistiche</button><button class="text-button" id="shareAppBtn" data-t="shareApp">📲 Condividi l’app</button></div><button type="button" class="btn secondary received-invite-btn hidden" id="openReceivedInviteBtn" data-t="openReceivedInvite">📩 Apri invito ricevuto</button>
-<button type="button" class="text-button privacy-link" id="privacyHomeBtn" data-t="privacyOpen">🔒 Privacy e sicurezza</button>
+<button type="button" class="btn secondary hidden" id="vs1PendingInviteBtn" data-t="vs1Pending">⚔️ Condividi la tua sfida</button><button type="button" class="text-button privacy-link" id="privacyHomeBtn" data-t="privacyOpen">🔒 Privacy e sicurezza</button>
 </section>
 <section class="screen" id="game">
  <div class="screenbar"><button class="back" data-back="home">← <span data-t="home">Home</span></button><div class="timer" id="timer">00:00</div></div>
@@ -71,13 +71,29 @@
 </section>
 <section class="screen" id="statsScreen"><div class="screenbar"><button class="back" data-back="home">← <span data-t="home">Home</span></button></div><h2 class="screen-title" data-t="stats">Le mie statistiche</h2><p class="screen-desc" data-t="statsIntro">I tuoi progressi rimangono sul dispositivo.</p><div class="stat-grid"><div><strong id="statWins">0</strong><small data-t="completed">Schemi completati</small></div><div><strong id="statToday">0</strong><small data-t="today">Completati oggi</small></div><div><strong id="statBest">—</strong><small data-t="best">Tempo migliore</small></div><div><strong id="statDaily">0</strong><small data-t="dailyDone">Sfide quotidiane</small></div></div><p class="small-muted" data-t="statsNote">I dati non si sincronizzano fra dispositivi.</p></section>
 </main>
-<footer><div>6 SUDOKU TEST <strong>v0.12.9.1</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
+<footer><div>6 SUDOKU TEST <strong>v0.12.9.2</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
 </div>
 
+<dialog id="vs1InviteDialog" class="modal"><div class="modal-body win-modal">
+<button type="button" class="close" data-close="vs1InviteDialog" aria-label="Chiudi">×</button>
+<div class="modal-emblem">⚔️</div><h2 data-t="vs1ReceivedTitle">Ti hanno sfidato!</h2>
+<p class="modal-intro"><strong id="vs1InviterName">—</strong> <span data-t="vs1ReceivedDesc">ha già giocato: riesci a batterlo?</span></p>
+<div id="vs1InviteDifficulty" class="vs1-difficulty">—</div><p>⏳ <span data-t="vs1Expires">Scade il</span> <strong id="vs1InviteRemaining">—</strong></p>
+<div id="vs1InviteStakeBox" class="vs1-stake-banner hidden"><strong data-t="vs1StakeLabel">🔥 Chi perde paga!</strong><p id="vs1InviteStake"></p></div>
+<p data-t="vs1ReceivedRules">Stesso Sudoku, un tentativo. Il tempo dell'amico resta segreto fino al risultato!</p>
+<p id="vs1InviteStatus" role="status" class="profile-help"></p>
+<button id="vs1InviteAccept" type="button" class="btn primary" data-t="vs1Accept">⚔️ Accetto la sfida!</button>
+<button class="btn secondary" type="button" data-close="vs1InviteDialog" data-t="cancel">Annulla</button></div></dialog>
+<dialog id="vs1ResultDialog" class="modal"><div class="modal-body win-modal">
+<div class="confetti-icon">🏆</div><h2 id="vs1ResultWinner">—</h2>
+<div class="vs1-score-pair"><div><small id="vs1ResultCreatorName">Sfidante</small><strong id="vs1ResultCreatorTime">—</strong></div><div><small data-t="vs1You">Tu</small><strong id="vs1ResultOpponentTime">—</strong></div></div>
+<p id="vs1ResultStake"></p>
+<div id="vs1InstallAfter"><p data-t="vs1InstallCopy">Ti sei divertito? Installa 6 Sudoku sul telefono per giocare quando vuoi!</p><button class="btn secondary" id="vs1ResultInstall" type="button" data-t="vs1Install">📲 Installa 6 Sudoku</button></div>
+<button class="btn primary" id="vs1ResultHome" type="button" data-t="home">Home</button></div></dialog>
 <dialog id="vs1SetupDialog" class="modal"><div class="modal-body">
  <button type="button" class="close" data-close="vs1SetupDialog" aria-label="Chiudi">×</button>
  <div class="modal-emblem">⚔️</div><h2 data-t="vs1Title">Sfida 1 VS 1</h2>
- <p class="modal-intro" data-t="vs1Intro">Gioca tu per primo. Il tuo tempo sarà registrato sul server. La condivisione con l'amico arriverà nel prossimo aggiornamento TEST.</p>
+ <p class="modal-intro" data-t="vs1Intro">Gioca tu per primo. Il tuo tempo sarà registrato sul server. Dopo aver completato il Sudoku, potrai invitare un amico.</p>
  <p class="profile-help" data-t="vs1Rule">Una sola partita aperta per volta. Nessun suggerimento.</p>
  <label for="vs1Stake" data-t="vs1StakeLabel">🔥 Chi perde paga! (facoltativo)</label>
  <select id="vs1Stake" class="wide-select">
@@ -96,8 +112,8 @@
  <button class="btn secondary" type="button" data-close="vs1SetupDialog" data-t="cancel">Annulla</button>
  </div></dialog>
 <dialog id="vs1CreatedDialog" class="modal"><div class="modal-body win-modal"><div class="confetti-icon">⚔️</div>
- <h2 data-t="vs1CreatedTitle">La tua partita è registrata!</h2><p class="modal-intro" data-t="vs1CreatedBody">Il server ha verificato lo schema e il tuo tempo. L'invito da condividere sarà attivato nel prossimo aggiornamento TEST.</p>
- <div id="vs1CreatedDifficulty" class="vs1-difficulty"></div><div class="final-time" id="vs1CreatedTime">—:—</div><button class="btn primary" type="button" id="vs1CreatedHome" data-t="home">Home</button></div></dialog>
+ <h2 data-t="vs1CreatedTitle">La tua partita è registrata!</h2><p class="modal-intro" data-t="vs1CreatedBody">Il server ha verificato lo schema e il tuo tempo. Ora puoi invitare un amico con il link della tua sfida!</p>
+ <div id="vs1CreatedDifficulty" class="vs1-difficulty"></div><div class="final-time" id="vs1CreatedTime">—:—</div><div class="vs1-link-wrap"><input id="vs1ShareLink" aria-label="Link della sfida" readonly></div><button class="btn primary" type="button" id="vs1ShareBtn" data-t="vs1Share">📤 Condividi la sfida</button><button class="btn secondary" type="button" id="vs1CopyBtn" data-t="vs1Copy">🔗 Copia link</button><p id="vs1ShareStatus" role="status" class="profile-help"></p><button class="btn primary" type="button" id="vs1CreatedHome" data-t="home">Home</button></div></dialog>
 
 <dialog id="dailyConfirmDialog" class="modal"><div class="modal-body daily-confirm">
  <button class="close" data-close="dailyConfirmDialog" aria-label="Chiudi">×</button>
