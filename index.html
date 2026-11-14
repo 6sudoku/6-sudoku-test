@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./assets/icon-192.png">
 <link rel="stylesheet" href="./css/style.css">
-<title>6 Sudoku TEST · v0.12.9.5.1</title>
+<title>6 Sudoku TEST · v0.12.9.5.2</title>
 <script src="./js/sudoku.js" defer></script>
 <script src="./js/languages.js" defer></script>
 <script src="./js/supabase-config.js" defer></script>
@@ -22,7 +22,7 @@
 <script src="./js/app.js" defer></script>
 </head>
 <body>
-<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.9.5.1 · Non è la versione ufficiale</div>
+<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.9.5.2 · Non è la versione ufficiale</div>
 <header class="topbar">
   <div class="brand"><img src="./assets/icon-192.png" alt="" width="43" height="43"><div><div class="brand-name">6 SUDOKU</div><div class="brand-sub">PLAY · THINK · ENJOY</div></div></div>
   <select id="language" class="lang" aria-label="Lingua"></select>
@@ -71,7 +71,7 @@
 </section>
 <section class="screen" id="statsScreen"><div class="screenbar"><button class="back" data-back="home">← <span data-t="home">Home</span></button></div><h2 class="screen-title" data-t="stats">Le mie statistiche</h2><p class="screen-desc" data-t="statsIntro">I tuoi progressi rimangono sul dispositivo.</p><div class="stat-grid"><div><strong id="statWins">0</strong><small data-t="completed">Schemi completati</small></div><div><strong id="statToday">0</strong><small data-t="today">Completati oggi</small></div><div><strong id="statBest">—</strong><small data-t="best">Tempo migliore</small></div><div><strong id="statDaily">0</strong><small data-t="dailyDone">Sfide quotidiane</small></div></div><p class="small-muted" data-t="statsNote">I dati non si sincronizzano fra dispositivi.</p></section>
 </main>
-<footer><div>6 SUDOKU TEST <strong>v0.12.9.5.1</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
+<footer><div>6 SUDOKU TEST <strong>v0.12.9.5.2</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
 </div>
 
 <dialog id="vs1InviteDialog" class="modal"><div class="modal-body win-modal">
@@ -112,8 +112,8 @@
  <button class="btn secondary" type="button" data-close="vs1SetupDialog" data-t="cancel">Annulla</button>
  </div></dialog>
 <dialog id="vs1CreatedDialog" class="modal"><div class="modal-body win-modal"><div class="confetti-icon">⚔️</div>
- <h2 data-t="vs1CreatedTitle">La tua partita è registrata!</h2><p class="modal-intro" data-t="vs1CreatedBody">Il server ha verificato lo schema e il tuo tempo. Ora puoi invitare un amico con il link della tua sfida!</p>
- <div id="vs1CreatedDifficulty" class="vs1-difficulty"></div><div class="final-time" id="vs1CreatedTime">—:—</div><div class="vs1-stake-banner" id="vs1CreatedStakeBox"><strong data-t="vs1StakeActive">🔥 Chi perde paga!</strong><p id="vs1CreatedStake"></p></div><div class="vs1-countdown" id="vs1CountdownBox" aria-live="off"><span data-t="vs1TimeLeft">⏳ Tempo per accettare</span><strong id="vs1Countdown" role="timer">--:--</strong></div><div id="vs1PlayingNotice" class="vs1-status-note hidden" role="status" data-t="vs1OpponentPlaying">⚔️ Il tuo amico sta giocando!</div><div id="vs1CompletedPanel" class="vs1-completed-panel hidden"><h3 id="vs1CreatorResultTitle">🏆 Risultato</h3><div class="vs1-score-pair"><div><small data-t="vs1You">Tu</small><strong id="vs1CreatorResultMyTime">—</strong></div><div><small id="vs1CreatorResultName">Amico</small><strong id="vs1CreatorResultTheirTime">—</strong></div></div><p id="vs1CreatorResultGap" class="vs1-result-story"></p></div><div class="vs1-link-wrap"><input id="vs1ShareLink" aria-label="Link della sfida" readonly></div><button class="btn primary" type="button" id="vs1ShareBtn" data-t="vs1Share">📤 Condividi la sfida</button><button class="btn secondary" type="button" id="vs1CopyBtn" data-t="vs1Copy">🔗 Copia link</button><p id="vs1ShareStatus" role="status" class="profile-help"></p><button class="btn secondary vs1-cancel" type="button" id="vs1CancelInvite" data-t="vs1CancelInvite">❌ Annulla sfida</button><button class="btn primary" type="button" id="vs1CreatedHome" data-t="home">Home</button></div></dialog>
+ <h2 id="vs1CreatedHeading" data-t="vs1CreatedTitle">La tua partita è registrata!</h2><p id="vs1CreatedIntro" class="modal-intro" data-t="vs1CreatedBody">Il server ha verificato lo schema e il tuo tempo. Ora puoi invitare un amico con il link della tua sfida!</p>
+ <div id="vs1CreatedDetails"><div id="vs1CreatedDifficulty" class="vs1-difficulty"></div><div class="final-time" id="vs1CreatedTime">—:—</div><div class="vs1-stake-banner" id="vs1CreatedStakeBox"><strong data-t="vs1StakeActive">🔥 Chi perde paga!</strong><p id="vs1CreatedStake"></p></div></div><div class="vs1-countdown" id="vs1CountdownBox" aria-live="off"><span data-t="vs1TimeLeft">⏳ Tempo per accettare</span><strong id="vs1Countdown" role="timer">--:--</strong></div><div id="vs1PlayingNotice" class="vs1-status-note hidden" role="status" data-t="vs1OpponentPlaying">⚔️ Il tuo amico sta giocando!</div><div id="vs1CompletedPanel" class="vs1-completed-panel hidden"><h3 id="vs1CreatorResultTitle">🏆 Risultato</h3><div class="vs1-score-pair"><div><small data-t="vs1You">Tu</small><strong id="vs1CreatorResultMyTime">—</strong></div><div><small id="vs1CreatorResultName">Amico</small><strong id="vs1CreatorResultTheirTime">—</strong></div></div><p id="vs1CreatorResultGap" class="vs1-result-story"></p></div><div class="vs1-link-wrap" id="vs1ShareLinkWrap"><input id="vs1ShareLink" aria-label="Link della sfida" readonly></div><button class="btn primary" type="button" id="vs1ShareBtn" data-t="vs1Share">📤 Condividi la sfida</button><button class="btn secondary" type="button" id="vs1CopyBtn" data-t="vs1Copy">🔗 Copia link</button><p id="vs1ShareStatus" role="status" class="profile-help"></p><button class="btn secondary vs1-cancel" type="button" id="vs1CancelInvite" data-t="vs1CancelInvite">❌ Annulla sfida</button><button class="btn primary" type="button" id="vs1CreatedHome" data-t="home">Home</button></div></dialog>
 
 <dialog id="dailyConfirmDialog" class="modal"><div class="modal-body daily-confirm">
  <button class="close" data-close="dailyConfirmDialog" aria-label="Chiudi">×</button>

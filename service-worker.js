@@ -1,5 +1,5 @@
-/* 6 Sudoku TEST v0.12.9.5.1: cache isolate e navigazione limitata alla sottocartella TEST. */
-const CACHE='6-sudoku-test-v0129-5-1';
+/* 6 Sudoku TEST v0.12.9.5.2: cache isolate e navigazione limitata alla sottocartella TEST. */
+const CACHE='6-sudoku-test-v0129-5-2';
 const FILES=['./','./index.html','./manifest.webmanifest','./css/style.css','./js/sudoku.js','./js/languages.js','./js/app.js','./js/supabase-config.js','./js/supabase-profile.js','./js/push.js','./js/daily-reminder.js','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png'];
 const SCOPE=new URL(self.registration.scope);
 self.addEventListener('install',event=>{
@@ -34,5 +34,11 @@ self.addEventListener('notificationclick',event=>{
  event.notification.close();
  const target=event.notification.data?.url||new URL('./',self.registration.scope).href;
  event.waitUntil((async()=>{const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-  const found=clients.find(c=>c.url.startsWith(self.registration.scope));if(found){await found.focus();if(target.includes('vs1=result')&&'navigate' in found)await found.navigate(target);return;}await self.clients.openWindow(target);})());
+  const found=clients.find(c=>c.url.startsWith(self.registration.scope));if(found){
+   // iOS PWA: invia il comando anche alla finestra già aperta, senza affidarsi solo alla navigazione.
+   if(target.includes('vs1=result'))found.postMessage({type:'VS1_OPEN_RESULT'});
+   await found.focus();
+   if(target.includes('vs1=result')&&'navigate' in found){try{await found.navigate(target)}catch(_){found.postMessage({type:'VS1_OPEN_RESULT'})}}
+   return;
+  }await self.clients.openWindow(target);})());
 });
