@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./assets/icon-192.png">
 <link rel="stylesheet" href="./css/style.css">
-<title>6 Sudoku TEST · v0.12.8.9</title>
+<title>6 Sudoku TEST · v0.12.9.0</title>
 <script src="./js/sudoku.js" defer></script>
 <script src="./js/languages.js" defer></script>
 <script src="./js/supabase-config.js" defer></script>
@@ -22,7 +22,7 @@
 <script src="./js/app.js" defer></script>
 </head>
 <body>
-<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.8.9 · Non è la versione ufficiale</div>
+<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.9.0 · Non è la versione ufficiale</div>
 <header class="topbar">
   <div class="brand"><img src="./assets/icon-192.png" alt="" width="43" height="43"><div><div class="brand-name">6 SUDOKU</div><div class="brand-sub">PLAY · THINK · ENJOY</div></div></div>
   <select id="language" class="lang" aria-label="Lingua"></select>
@@ -43,7 +43,7 @@
   <button class="level" data-level="intermediate"><span class="level-dot amber"></span><span class="level-copy"><strong data-t="intermediate">Intermedio</strong><small data-t="intermediateDesc">Un po’ più di ragionamento</small></span><span class="level-check">✓</span></button>
   <div class="level-hard-pair"><button class="level" data-level="advanced"><span class="level-dot red"></span><span class="level-copy"><strong data-t="advanced">MASTER</strong><small data-t="advancedDesc">Supera i tuoi limiti</small></span><span class="level-check">✓</span></button><button class="level level-hero" data-level="hero"><span class="level-dot hero-dot"></span><span class="level-copy"><strong data-t="hero">👑 HERO</strong><small data-t="heroDesc">Sfida estrema</small></span><span class="level-check">✓</span></button></div>
  </div>
- <div class="home-actions"><button id="freeBtn" class="btn primary" data-t="play">Inizia una partita libera</button><button id="rankingBtn" class="btn secondary" data-t="ranking">🏆 Classifica mondiale</button></div>
+ <div class="home-actions"><button id="freeBtn" class="btn primary" data-t="play">Inizia una partita libera</button><button id="oneVsOneBtn" class="btn secondary" data-t="vs1Button">⚔️ Sfida 1 VS 1 · PROVA</button><button id="rankingBtn" class="btn secondary" data-t="ranking">🏆 Classifica mondiale</button></div>
  <div class="install-banner" id="installBanner"><img src="./assets/icon-192.png" width="43" height="43" alt=""><div><strong data-t="install">Installa 6 Sudoku</strong><small data-t="installDesc">Installa l'app per giocare più comodamente.</small></div><button id="installBtn" class="btn primary compact" data-t="installButton">Installa</button></div>
  <div class="update-controls"><button type="button" id="checkUpdatesBtn" class="text-button update-check" data-t="checkUpdates">↻ Controlla aggiornamenti</button><span id="updateFeedback" class="update-feedback" role="status" aria-live="polite"></span></div>
  <div class="home-links"><button class="text-button" id="rulesBtn" data-t="rules">❓ Come si gioca?</button><button class="text-button" id="statsBtn" data-t="stats">📊 Le mie statistiche</button><button class="text-button" id="shareAppBtn" data-t="shareApp">📲 Condividi l’app</button></div><button type="button" class="btn secondary received-invite-btn hidden" id="openReceivedInviteBtn" data-t="openReceivedInvite">📩 Apri invito ricevuto</button>
@@ -71,8 +71,34 @@
 </section>
 <section class="screen" id="statsScreen"><div class="screenbar"><button class="back" data-back="home">← <span data-t="home">Home</span></button></div><h2 class="screen-title" data-t="stats">Le mie statistiche</h2><p class="screen-desc" data-t="statsIntro">I tuoi progressi rimangono sul dispositivo.</p><div class="stat-grid"><div><strong id="statWins">0</strong><small data-t="completed">Schemi completati</small></div><div><strong id="statToday">0</strong><small data-t="today">Completati oggi</small></div><div><strong id="statBest">—</strong><small data-t="best">Tempo migliore</small></div><div><strong id="statDaily">0</strong><small data-t="dailyDone">Sfide quotidiane</small></div></div><p class="small-muted" data-t="statsNote">I dati non si sincronizzano fra dispositivi.</p></section>
 </main>
-<footer><div>6 SUDOKU TEST <strong>v0.12.8.9</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
+<footer><div>6 SUDOKU TEST <strong>v0.12.9.0</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
 </div>
+
+<dialog id="vs1SetupDialog" class="modal"><div class="modal-body">
+ <button type="button" class="close" data-close="vs1SetupDialog" aria-label="Chiudi">×</button>
+ <div class="modal-emblem">⚔️</div><h2 data-t="vs1Title">Sfida 1 VS 1</h2>
+ <p class="modal-intro" data-t="vs1Intro">Gioca tu per primo. Il tuo tempo sarà registrato sul server. La condivisione con l'amico arriverà nel prossimo aggiornamento TEST.</p>
+ <p class="profile-help" data-t="vs1Rule">Una sola partita aperta per volta. Nessun suggerimento.</p>
+ <label for="vs1Stake" data-t="vs1StakeLabel">🔥 Chi perde paga! (facoltativo)</label>
+ <select id="vs1Stake" class="wide-select">
+ <option value="none" data-t="vs1None">Niente, giochiamo e basta</option>
+ <option value="coffee" data-t="vs1Coffee">☕ Caffè</option>
+ <option value="breakfast" data-t="vs1Breakfast">🥐 Caffè + cornetto</option>
+ <option value="aperitivo" data-t="vs1Aperitivo">🍹 Aperitivo</option>
+ <option value="lunch" data-t="vs1Lunch">🍝 Pranzo</option>
+ <option value="dinner" data-t="vs1Dinner">🍽️ Cena</option>
+ <option value="custom" data-t="vs1Custom">✍️ Scrivi tu!</option>
+ </select>
+ <div id="vs1CustomRow" hidden><label for="vs1CustomText" data-t="vs1CustomLabel">La tua frase divertente</label><textarea id="vs1CustomText" rows="2" maxlength="150"></textarea><p class="profile-help"><span id="vs1Count">0</span>/150</p></div>
+ <label class="profile-check" style="margin:16px 0"><input id="vs1Notify" type="checkbox"><span data-t="vs1Notify">🔔 Avvisami quando l'amico ha giocato (Sì/No)</span></label>
+ <p id="vs1Status" class="profile-help" role="status"></p>
+ <button id="vs1Start" class="btn primary" type="button" data-t="vs1Start">⚔️ Gioca e prepara la sfida</button>
+ <button class="btn secondary" type="button" data-close="vs1SetupDialog" data-t="cancel">Annulla</button>
+ </div></dialog>
+<dialog id="vs1CreatedDialog" class="modal"><div class="modal-body win-modal"><div class="confetti-icon">⚔️</div>
+ <h2 data-t="vs1CreatedTitle">La tua partita è registrata!</h2><p class="modal-intro" data-t="vs1CreatedBody">Il server ha verificato lo schema e il tuo tempo. L'invito da condividere sarà attivato nel prossimo aggiornamento TEST.</p>
+ <div class="final-time" id="vs1CreatedTime">—:—</div><button class="btn primary" type="button" id="vs1CreatedHome" data-t="home">Home</button></div></dialog>
+
 <dialog id="dailyConfirmDialog" class="modal"><div class="modal-body daily-confirm">
  <button class="close" data-close="dailyConfirmDialog" aria-label="Chiudi">×</button>
  <div class="modal-emblem">🏆</div><h2 data-t="daily">Sfida quotidiana</h2>
