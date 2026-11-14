@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id), E=window.SudokuEngine;
-const APP_VERSION='0.12.9.2', VERSION_URL='./version.json';
+const APP_VERSION='0.12.9.3', VERSION_URL='./version.json';
 const STORE='6sudoku-test-v012-state', LANGKEY='6sudoku-test-lang', PROFILEKEY='6sudoku-test-profile';
 const LEVELS=['beginner','intermediate','advanced','hero'];
 const LEVEL_LABELS={beginner:'🌱 ZEN',intermediate:'⚡ FOCUS',advanced:'💪 MASTER',hero:'👑 HERO'};
@@ -246,13 +246,13 @@ function vs1Message(){
  const saved=read('6sudoku-test-vs1-last-created',null);if(!saved)return null;
  const lines=[tr('vs1MessageTitle'),tr('vs1MessageChallenge'),tr('vs1MessageHours')];
  const stake=vs1OfferText(saved.stake_kind,saved.stake_text);
- if(stake)lines.push(tr('vs1StakeLabel')+' '+stake);
+ if(stake)lines.push(tr('vs1StakeActive')+' '+stake);
  lines.push(tr('vs1MessageTease'),vs1Link(saved));return lines.join('\n');
 }
 async function shareVs1(){
  const text=vs1Message();if(!text)return;
  const link=vs1Link(read('6sudoku-test-vs1-last-created',null));
- if(navigator.share){try{await navigator.share({text, url:link});return}catch(err){if(err.name==='AbortError')return}}
+ if(navigator.share){try{await navigator.share({text:text.replace(link,'').trim(), url:link});return}catch(err){if(err.name==='AbortError')return}}
  try{await navigator.clipboard.writeText(text);$('vs1ShareStatus').textContent=tr('vs1Copied')}
  catch(_){$('vs1ShareStatus').textContent=tr('vs1CopyManual')}
 }
@@ -300,7 +300,9 @@ async function finishVs1Opponent(){
   $('vs1ResultCreatorTime').textContent=format(Math.ceil(result.creator_elapsed_ms/1000));
   $('vs1ResultCreatorName').textContent=result.creator_name||tr('vs1Challenger');
   const stake=vs1OfferText(result.stake_kind,result.stake_text);
-  $('vs1ResultStake').textContent=stake?(tr('vs1StakeLabel')+' '+stake):'';
+  $('vs1ResultStake').textContent=stake?(tr('vs1StakeActive')+' '+stake):'';
+  const gap=Math.abs(Number(result.creator_elapsed_ms)-Number(result.opponent_elapsed_ms));
+  $('vs1ResultStory').textContent=tr(result.winner==='opponent'?'vs1WinStory':result.winner==='creator'?'vs1LoseStory':'vs1TieStory').replace('{seconds}',String(Math.round(gap/1000)));
   $('vs1InstallAfter').classList.toggle('hidden',isInstalled());
   $('feedback').textContent='';openDialog('vs1ResultDialog');
  }catch(err){$('feedback').textContent=tr('vs1Error')+' '+err.message;saveState();startTimer()}
