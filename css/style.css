@@ -145,3 +145,7 @@
 #vs1CreatedDialog .vs1-score-pair strong{font-size:clamp(1.1rem,5.3vw,1.65rem);overflow-wrap:anywhere}
 #vs1CreatedDialog .vs1-link-wrap input{box-sizing:border-box;width:100%;min-width:0}
 #vs1CreatedDialog h2{overflow-wrap:anywhere}
+
+/* v0.12.9.5.5 — avversario e posta della sfida nel risultato del creatore */
+.vs1-result-against{font-size:.95rem;font-weight:600;margin:4px 0 10px;overflow-wrap:anywhere}
+.vs1-result-reward{background:#efe5f5;border-radius:12px;padding:12px 10px;margin:12px 0 3px;font-size:1rem;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
