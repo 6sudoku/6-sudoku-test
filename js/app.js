@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id), E=window.SudokuEngine;
-const APP_VERSION='0.12.9.1', VERSION_URL='./version.json';
+const APP_VERSION='0.12.9.2', VERSION_URL='./version.json';
 const STORE='6sudoku-test-v012-state', LANGKEY='6sudoku-test-lang', PROFILEKEY='6sudoku-test-profile';
 const LEVELS=['beginner','intermediate','advanced','hero'];
 const LEVEL_LABELS={beginner:'🌱 ZEN',intermediate:'⚡ FOCUS',advanced:'💪 MASTER',hero:'👑 HERO'};
@@ -155,18 +155,18 @@ function saveState(){if(current&&!current.finished){state.active={...current,not
 function getChallengeParams(){const q=new URLSearchParams(location.search),s=q.get('s'),d=q.get('d'),t=q.get('t');if(!s&&!d&&!t)return null;if(!s||!LEVELS.includes(d)||!/^[a-zA-Z0-9_\-]{1,60}$/.test(s)){return {invalid:true}}const time=t!==null&&/^\d{1,6}$/.test(t)?Math.min(86400,Number(t)):null;return {seed:s,level:d,target:time}}
 function newSeed(){if(crypto?.getRandomValues){let arr=new Uint32Array(2);crypto.getRandomValues(arr);return Array.from(arr,n=>n.toString(36)).join('')}return Math.random().toString(36).slice(2,14)}
 function buildGame(mode,chosen,seed,target=null){let grid=E.create(seed,chosen);return {mode,seed,level:chosen,puzzle:grid.puzzle,solution:grid.solution,values:[...grid.puzzle],notes:Array.from({length:36},()=>[]),elapsed:0,hints:0,day:mode==='daily'?date():null,target,finished:false}}
-function gameTitle(){return current.mode==='vs1_creator'?tr('vs1Title'):current.mode==='daily'?tr('daily'):current.mode==='challenge'?tr('friendChallenge'):tr(current.level)}
+function gameTitle(){return ['vs1_creator','vs1_opponent'].includes(current.mode)?tr('vs1Title'):current.mode==='daily'?tr('daily'):current.mode==='challenge'?tr('friendChallenge'):tr(current.level)}
 function start(mode){if(mode==='daily'){askDaily();return}
  if(mode==='challenge'){if(!deepLink||deepLink.invalid){alert(tr('invalidLink'));return}current=buildGame('challenge',deepLink.level,deepLink.seed,deepLink.target)}
  else{current=buildGame('free',level,newSeed())}
  state.active=current;saveState();enterGame()}
-function enterGame(){selected=-1;noteMode=false;lastTick=Date.now();$('gameTitle').textContent=gameTitle();$('vs1GameDifficulty').classList.toggle('hidden',current.mode!=='vs1_creator');if(current.mode==='vs1_creator')$('vs1GameDifficulty').textContent=levelLabel(current.level);$('timer').textContent=format(current.elapsed);$('challengeBox').classList.toggle('hidden',current.target===null||current.target===undefined);$('beatTime').textContent=current.target===null?'':format(current.target);$('hintBtn').hidden=current.mode==='daily'||current.mode==='vs1_creator';$('feedback').textContent='';applyTexts();drawBoard();show('game');startTimer()}
+function enterGame(){selected=-1;noteMode=false;lastTick=Date.now();$('gameTitle').textContent=gameTitle();$('vs1GameDifficulty').classList.toggle('hidden',!['vs1_creator','vs1_opponent'].includes(current.mode));if(['vs1_creator','vs1_opponent'].includes(current.mode))$('vs1GameDifficulty').textContent=levelLabel(current.level);$('timer').textContent=format(current.elapsed);$('challengeBox').classList.toggle('hidden',current.target===null||current.target===undefined);$('beatTime').textContent=current.target===null?'':format(current.target);$('hintBtn').hidden=current.mode==='daily'||['vs1_creator','vs1_opponent'].includes(current.mode);$('feedback').textContent='';applyTexts();drawBoard();show('game');startTimer()}
 function startTimer(){clearInterval(timer);lastTick=Date.now();timer=setInterval(()=>{if(!current||current.finished||$('game').classList.contains('active')===false)return;if(document.visibilityState==='hidden'){lastTick=Date.now();return}const now=Date.now();const seconds=Math.floor((now-lastTick)/1000);if(seconds>0){current.elapsed+=seconds;lastTick+=seconds*1000;$('timer').textContent=format(current.elapsed);if(seconds||current.elapsed%5===0)saveState()}},250)}
 function pauseTimer(){clearInterval(timer);if(current&&!current.finished&&$('game').classList.contains('active')){let now=Date.now(),delta=document.visibilityState==='visible'?Math.floor((now-lastTick)/1000):0;if(delta>0)current.elapsed+=delta;saveState()}}
 function drawBoard(){if(!current)return;const el=$('board');el.replaceChildren();current.values.forEach((num,i)=>{const b=document.createElement('button');b.type='button';b.className='cell';b.setAttribute('role','gridcell');b.setAttribute('aria-label',`R${Math.floor(i/6)+1} C${i%6+1} ${num||'-'}`);if(current.puzzle[i])b.classList.add('fixed');if(i===selected)b.classList.add('selected');else if(selected>=0&&(Math.floor(i/6)===Math.floor(selected/6)||i%6===selected%6))b.classList.add('related');if(num&&E.candidates([...current.values.slice(0,i),0,...current.values.slice(i+1)],i).indexOf(num)<0)b.classList.add('wrong');if(num)b.textContent=num;else if(current.notes[i]?.length){const notes=document.createElement('span');notes.className='notes-grid';for(let n=1;n<=6;n++){const t=document.createElement('span');t.textContent=current.notes[i].includes(n)?n:'';notes.append(t)}b.append(notes)}b.addEventListener('click',()=>{selected=i;drawBoard()});el.append(b)})}
-function enterNumber(n){if(!current||selected<0){$('feedback').textContent=tr('selectCell');return}if(current.puzzle[selected])return;if(noteMode){let vals=new Set(current.notes[selected]);if(vals.has(n))vals.delete(n);else vals.add(n);current.notes[selected]=[...vals].sort();drawBoard();saveState();return}current.values[selected]=n;current.notes[selected]=[];drawBoard();saveState();if((current.mode==='daily'&&current.dailyOnline)||current.mode==='vs1_creator'?current.values.every(v=>v>=1)&&E.valid(current.values):current.values.every((v,i)=>v===current.solution[i]))win()}
+function enterNumber(n){if(!current||selected<0){$('feedback').textContent=tr('selectCell');return}if(current.puzzle[selected])return;if(noteMode){let vals=new Set(current.notes[selected]);if(vals.has(n))vals.delete(n);else vals.add(n);current.notes[selected]=[...vals].sort();drawBoard();saveState();return}current.values[selected]=n;current.notes[selected]=[];drawBoard();saveState();if((current.mode==='daily'&&current.dailyOnline)||['vs1_creator','vs1_opponent'].includes(current.mode)?current.values.every(v=>v>=1)&&E.valid(current.values):current.values.every((v,i)=>v===current.solution[i]))win()}
 function erase(){if(!current||selected<0||current.puzzle[selected])return;current.values[selected]=0;current.notes[selected]=[];$('feedback').textContent='';drawBoard();saveState()}
-function hint(){if(!current)return;if(current.mode==='daily'||current.mode==='vs1_creator'){$('feedback').textContent=tr('noHintDaily');return}let i=selected;if(i<0||current.values[i]===current.solution[i])i=current.values.findIndex((v,j)=>v!==current.solution[j]);if(i<0)return;current.values[i]=current.solution[i];current.notes[i]=[];current.hints++;current.elapsed+=30;$('timer').textContent=format(current.elapsed);$('feedback').textContent=tr('hintUsed');drawBoard();saveState();if(current.values.every((v,j)=>v===current.solution[j]))win()}
+function hint(){if(!current)return;if(current.mode==='daily'||['vs1_creator','vs1_opponent'].includes(current.mode)){$('feedback').textContent=tr('noHintDaily');return}let i=selected;if(i<0||current.values[i]===current.solution[i])i=current.values.findIndex((v,j)=>v!==current.solution[j]);if(i<0)return;current.values[i]=current.solution[i];current.notes[i]=[];current.hints++;current.elapsed+=30;$('timer').textContent=format(current.elapsed);$('feedback').textContent=tr('hintUsed');drawBoard();saveState();if(current.values.every((v,j)=>v===current.solution[j]))win()}
 
 let vs1Busy=false,vs1Options=null;
 function askVs1(){
@@ -207,21 +207,109 @@ async function finishVs1(){
   const response=await vs1Api({action:'finish',session_id:current.vs1SessionId,values:current.values.join(''),...opts});
   if(response.status!=='created'||!response.ok||!response.challenge_id)throw Error(response.reason||tr('vs1Error'));
   current.finished=true;current.elapsed=Math.ceil(Number(response.creator_elapsed_ms)/1000);
-  // Conservare il token localmente in TEST finché non sarà disponibile l'accesso dell'amico.
-  // Non pubblicarlo né mostrarlo: la funzione destinatario non è ancora stata rilasciata.
-  save('6sudoku-test-vs1-last-created',{challenge_id:response.challenge_id,token:response.invite_token,expires_at:response.expires_at});
+  // Il token è segreto e identifica l'invito: mostrarlo soltanto al creatore per la condivisione.
+  save('6sudoku-test-vs1-last-created',{challenge_id:response.challenge_id,token:response.invite_token,expires_at:response.expires_at,stake_kind:opts.stake_kind,stake_text:opts.stake_text,difficulty:current.level,creator_elapsed_ms:response.creator_elapsed_ms});
   state.active=null;save(STORE,state);
   $('vs1CreatedTime').textContent=format(current.elapsed);
   $('vs1CreatedDifficulty').textContent=levelLabel(current.level);
   $('feedback').textContent='';
+  updateVs1Share();
   openDialog('vs1CreatedDialog');
  }catch(err){console.error('1vs1 finish:',err);$('feedback').textContent=tr('vs1Error')+' '+err.message;saveState();startTimer();}
  finally{vs1Busy=false}
 }
 
+
+// ---------------- 1 VS 1: invito, unico avversario, risultato ---------------
+let vs1Invitation=null,vs1Preview=null,vs1PlayBusy=false;
+function vs1Link(info){const u=new URL('./',location.href);u.searchParams.set('v',info.challenge_id);u.searchParams.set('k',info.token);return u.href}
+function vs1Query(){
+ const q=new URLSearchParams(location.search),v=q.get('v'),k=q.get('k');
+ if(!v&&!k)return null;
+ if(!/^[0-9a-f-]{36}$/i.test(v||'')||!/^[0-9a-f]{64}$/i.test(k||''))return {invalid:true};
+ return {challenge_id:v,invite_token:k};
+}
+function vs1OfferText(kind,custom){if(kind==='none')return '';if(kind==='custom')return custom||'';const map={coffee:'vs1Coffee',breakfast:'vs1Breakfast',aperitivo:'vs1Aperitivo',lunch:'vs1Lunch',dinner:'vs1Dinner'};return tr(map[kind]||'vs1None')}
+async function vs1OpponentApi(body){
+ const db=await window.SudokuOnline.getClient();
+ const {data,error}=await db.functions.invoke('play-1vs1',{body});
+ if(error)throw Error(data?.error||error.message||tr('vs1Error'));
+ if(data?.error)throw Error(data.error);return data;
+}
+function updateVs1Share(){
+ const stored=read('6sudoku-test-vs1-last-created',null);
+ const valid=stored&&stored.challenge_id&&/^[0-9a-f]{64}$/i.test(stored.token||'')&&new Date(stored.expires_at).getTime()>Date.now();
+ $('vs1PendingInviteBtn').classList.toggle('hidden',!valid);
+ if(valid){$('vs1ShareLink').value=vs1Link(stored);$('vs1CreatedDifficulty').textContent=levelLabel(stored.difficulty);$('vs1CreatedTime').textContent=format(Math.ceil((stored.creator_elapsed_ms||0)/1000));}
+}
+function vs1Message(){
+ const saved=read('6sudoku-test-vs1-last-created',null);if(!saved)return null;
+ const lines=[tr('vs1MessageTitle'),tr('vs1MessageChallenge'),tr('vs1MessageHours')];
+ const stake=vs1OfferText(saved.stake_kind,saved.stake_text);
+ if(stake)lines.push(tr('vs1StakeLabel')+' '+stake);
+ lines.push(tr('vs1MessageTease'),vs1Link(saved));return lines.join('\n');
+}
+async function shareVs1(){
+ const text=vs1Message();if(!text)return;
+ const link=vs1Link(read('6sudoku-test-vs1-last-created',null));
+ if(navigator.share){try{await navigator.share({text, url:link});return}catch(err){if(err.name==='AbortError')return}}
+ try{await navigator.clipboard.writeText(text);$('vs1ShareStatus').textContent=tr('vs1Copied')}
+ catch(_){$('vs1ShareStatus').textContent=tr('vs1CopyManual')}
+}
+async function copyVs1Link(){const saved=read('6sudoku-test-vs1-last-created',null);if(!saved)return;
+ try{await navigator.clipboard.writeText(vs1Link(saved));$('vs1ShareStatus').textContent=tr('vs1Copied')}
+ catch(_){$('vs1ShareLink').select();$('vs1ShareStatus').textContent=tr('vs1CopyManual')}
+}
+async function openVs1Invitation(){
+ if(!vs1Invitation||vs1Invitation.invalid){alert(tr('vs1InvalidInvite'));return}
+ $('vs1InviteStatus').textContent=tr('vs1Loading');
+ $('vs1InviteAccept').disabled=true;openDialog('vs1InviteDialog');
+ try{
+  const info=await vs1OpponentApi({action:'preview',...vs1Invitation});
+  vs1Preview=info;
+  $('vs1InviterName').textContent=info.creator_name||'6 Sudoku';
+  $('vs1InviteDifficulty').textContent=levelLabel(info.difficulty);
+  $('vs1InviteStake').textContent=vs1OfferText(info.stake_kind,info.stake_text);
+  $('vs1InviteStakeBox').classList.toggle('hidden',!$('vs1InviteStake').textContent);
+  $('vs1InviteRemaining').textContent=new Date(info.expires_at).toLocaleString(lang,{dateStyle:'short',timeStyle:'short'});
+  $('vs1InviteStatus').textContent=info.available?tr('vs1InvitedReady'):tr('vs1InviteUnavailable');
+  $('vs1InviteAccept').disabled=!info.available;
+ }catch(err){$('vs1InviteStatus').textContent=tr('vs1InvalidInvite')+' '+(err.message||'')}
+}
+async function startVs1Opponent(){
+ if(vs1PlayBusy||!vs1Invitation)return;
+ if(!profile?.id||!profile.name){drawProfile();closeDialog('vs1InviteDialog');openDialog('profileDialog');return}
+ vs1PlayBusy=true;$('vs1InviteAccept').disabled=true;$('vs1InviteStatus').textContent=tr('vs1Starting');
+ try{
+  const info=await vs1OpponentApi({action:'start',...vs1Invitation});
+  if(!/^[0-6]{36}$/.test(info.puzzle||''))throw Error(tr('vs1Error'));
+  const puzzle=Array.from(info.puzzle,Number);
+  current={mode:'vs1_opponent',level:info.difficulty,seed:'vs1-opponent-'+vs1Invitation.challenge_id,puzzle,solution:null,values:[...puzzle],notes:Array.from({length:36},()=>[]),elapsed:0,hints:0,target:null,finished:false,vs1ChallengeId:vs1Invitation.challenge_id,vs1InviteToken:vs1Invitation.invite_token,vs1StartedAt:info.started_at};
+  state.active=current;saveState();closeDialog('vs1InviteDialog');enterGame();
+ }catch(err){$('vs1InviteStatus').textContent=tr('vs1Error')+' '+err.message}
+ finally{vs1PlayBusy=false;$('vs1InviteAccept').disabled=false}
+}
+async function finishVs1Opponent(){
+ if(vs1PlayBusy)return;vs1PlayBusy=true;clearInterval(timer);$('feedback').textContent=tr('vs1Finishing');
+ try{
+  const result=await vs1OpponentApi({action:'finish',challenge_id:current.vs1ChallengeId,invite_token:current.vs1InviteToken,values:current.values.join('')});
+  if(!result.ok||result.status!=='completed')throw Error(tr('vs1Error'));
+  current.finished=true;state.active=null;save(STORE,state);
+  $('vs1ResultWinner').textContent=tr(result.winner==='opponent'?'vs1Won':result.winner==='creator'?'vs1Lost':'vs1Tie');
+  $('vs1ResultOpponentTime').textContent=format(Math.ceil(result.opponent_elapsed_ms/1000));
+  $('vs1ResultCreatorTime').textContent=format(Math.ceil(result.creator_elapsed_ms/1000));
+  $('vs1ResultCreatorName').textContent=result.creator_name||tr('vs1Challenger');
+  const stake=vs1OfferText(result.stake_kind,result.stake_text);
+  $('vs1ResultStake').textContent=stake?(tr('vs1StakeLabel')+' '+stake):'';
+  $('vs1InstallAfter').classList.toggle('hidden',isInstalled());
+  $('feedback').textContent='';openDialog('vs1ResultDialog');
+ }catch(err){$('feedback').textContent=tr('vs1Error')+' '+err.message;saveState();startTimer()}
+ finally{vs1PlayBusy=false}
+}
 async function win(){
  if(remoteDailyBusy)return;
  if(current?.mode==='vs1_creator'){await finishVs1();return;}
+ if(current?.mode==='vs1_opponent'){await finishVs1Opponent();return;}
  if(current?.mode==='daily'&&current.dailyOnline){
   remoteDailyBusy=true;clearInterval(timer);
   try{
@@ -419,7 +507,7 @@ async function saveProfile(event){event.preventDefault();const name=$('nickname'
  try{if(window.SudokuOnline?.configured){refreshProfileConnection(tr('profileConnecting'));const result=await window.SudokuOnline.saveProfile({name,country,language:lang,notify});onlineId=result.userId;}}
  catch(err){btn.disabled=false;refreshProfileConnection(tr('profileSyncFailed')+(err?.message?' ('+err.message+')':''));return}
  finally{btn.disabled=false}
- profile={id:onlineId||profile?.id||'p-'+newSeed(),name,country};save(PROFILEKEY,profile);closeDialog('profileDialog');window.SudokuReminderPrefs?.refresh();drawRanking();if(pendingDaily){pendingDaily=false;askDaily()}}
+ profile={id:onlineId||profile?.id||'p-'+newSeed(),name,country};save(PROFILEKEY,profile);closeDialog('profileDialog');window.SudokuReminderPrefs?.refresh();drawRanking();if(pendingDaily){pendingDaily=false;askDaily()}else if(vs1Invitation){openVs1Invitation()}}
 function renderRules(){const box=$('rulesContent');box.replaceChildren();(window.RULES[lang]||window.RULES.it).forEach(([title,body],i)=>{const section=document.createElement('section');section.className='rules-section';const h=document.createElement('h3');h.textContent=(i+1)+'. '+title;const p=document.createElement('p');p.textContent=body;section.append(h,p);box.append(section)})}
 function openInstall(){if(isInstalled())return;$('installSteps').classList.remove('hidden');$('androidInstall').classList.add('hidden');if(!/iPad|iPhone|iPod/.test(navigator.userAgent)){if(installEvent||/Android/i.test(navigator.userAgent)){$('installSteps').classList.add('hidden');$('androidInstall').classList.remove('hidden')}}drawStep();openDialog('installDialog')}
 function drawStep(){const icons=['🌐','📤','➕','📲','🧩'];$('stepIllustration').textContent=icons[step];$('stepCount').textContent=tr('stepOf',{current:step+1});$('stepTitle').textContent=tr('stepTitle'+(step+1));$('stepBody').textContent=tr('stepBody'+(step+1));$('stepPrev').disabled=step===0;$('stepNext').textContent=step===4?tr('understood'):tr('next')}
@@ -492,7 +580,7 @@ function refreshDeleteProfileGuard(){
  const button=$('deleteProfileOpenBtn');if(button)button.disabled=!canDeleteProfile();
  const note=$('deleteProfileGuard');if(note)note.textContent=tr(canDeleteProfile()?'deleteProfileSafety':'deleteProfileNeedProfile');
 }
-function wire(){LANGS.forEach(([code,name])=>{let opt=document.createElement('option');opt.value=code;opt.textContent=name;$('language').append(opt)});$('language').onchange=e=>changeLanguage(e.target.value);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{level=b.dataset.level;applyTexts();drawDailyFeature()});$('freeBtn').onclick=()=>start('free');$('oneVsOneBtn').onclick=askVs1;$('vs1Stake').onchange=()=>{$('vs1CustomRow').hidden=$('vs1Stake').value!=='custom'};$('vs1CustomText').oninput=()=>{$('vs1Count').textContent=Array.from($('vs1CustomText').value).length};$('vs1Start').onclick=startVs1;$('vs1CreatedHome').onclick=()=>{closeDialog('vs1CreatedDialog');show('home')};$('dailyBtn').onclick=askDaily;$('dailyConfirmStart').onclick=confirmDaily;$('rankingBtn').onclick=()=>show('ranking');$('statsBtn').onclick=()=>show('statsScreen');$('rulesBtn').onclick=$('rulesGameBtn').onclick=()=>{renderRules();openDialog('rulesDialog')};$('shareAppBtn').onclick=()=>openShare(true);$('deleteProfileOpenBtn').onclick=showDeleteProfile;$('deleteProfileAgree').onchange=()=>{$('deleteProfileConfirmBtn').disabled=deletingProfile||!$('deleteProfileAgree').checked};$('deleteProfileConfirmBtn').onclick=confirmDeleteProfile;$('deleteProfileCancelBtn').onclick=()=>{if(!deletingProfile)closeDialog('deleteProfileDialog')};$('privacyHomeBtn').onclick=()=>{refreshDeleteProfileGuard();openDialog('privacyDialog')};$('privacyProfileBtn').onclick=()=>{closeDialog('profileDialog');refreshDeleteProfileGuard();openDialog('privacyDialog')};$('checkUpdatesBtn').onclick=()=>checkForUpdate(false);$('updateLater').onclick=()=>closeDialog('updateDialog');$('updateNow').onclick=applyUpdate;$('installBtn').onclick=openInstall;document.querySelectorAll('[data-back]').forEach(b=>b.onclick=goHome);$('rankingTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{rankedLevel=b.dataset.rank;drawRanking()});$('editProfileBtn').onclick=()=>{drawProfile();openDialog('profileDialog');window.SudokuPush?.refresh().catch(()=>{})};$('rankDailyBtn').onclick=()=>{level=rankedLevel;applyTexts();start('daily')};$('rankShareBtn').onclick=shareDailyFromRanking;$('winRanking').onclick=()=>{closeDialog('winDialog');rankedLevel=current?.level||level;show('ranking')};$('dailyAlreadyShare').onclick=()=>{const key=state.daily[todayKey(rankedLevel)];const score=dailyShareRecord?.score??key?.score;if(!Number.isFinite(score)){closeDialog('dailyAlreadyDialog');show('ranking');return}shareData=getDailyShare(rankedLevel,score);closeDialog('dailyAlreadyDialog');openDialog('shareDialog')};$('dailyAlreadyRanking').onclick=()=>{closeDialog('dailyAlreadyDialog');show('ranking')};$('inviteStart').onclick=()=>{closeDialog('dailyInviteDialog');askDaily()};$('iosInviteCopy').onclick=copyDailyInvitation;$('openReceivedInviteBtn').onclick=openReceivedInvitation;$('dailyAlreadyHome').onclick=()=>{closeDialog('dailyAlreadyDialog');show('home')};$('inviteHome').onclick=()=>{closeDialog('dailyInviteDialog');show('home')};$('profileForm').onsubmit=saveProfile;$('linkEmailBtn').onclick=linkProfileEmail;$('recoverEmailBtn').onclick=recoverProfileEmail;$('nickname').addEventListener('input',updatePreview);$('country').addEventListener('change',updatePreview);document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeDialog(b.dataset.close));$('numkeys').innerHTML=Array.from({length:6},(_,i)=>`<button type="button">${i+1}</button>`).join('');$('numkeys').querySelectorAll('button').forEach((b,i)=>b.onclick=()=>enterNumber(i+1));$('eraseBtn').onclick=erase;$('notesBtn').onclick=()=>{noteMode=!noteMode;applyTexts();$('notesBtn').classList.toggle('active',noteMode)};$('hintBtn').onclick=hint;$('stepPrev').onclick=()=>{step=Math.max(0,step-1);drawStep()};$('stepNext').onclick=()=>{if(step===4)closeDialog('installDialog');else{step++;drawStep()}};$('installConfirm').onclick=requestInstall;$('winNew').onclick=()=>{closeDialog('winDialog');start('free')};$('winHome').onclick=()=>{closeDialog('winDialog');show('home')};$('winShare').onclick=()=>{closeDialog('winDialog');openShare(false)};$('whatsappBtn').onclick=shareWhatsApp;$('nativeShareBtn').onclick=shareNative;$('copyLinkBtn').onclick=copyLink;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e});window.addEventListener('appinstalled',()=>{$('installBanner').classList.add('hidden');closeDialog('installDialog')});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')pauseTimer();else if(current&&!current.finished&&$('game').classList.contains('active'))startTimer()});window.addEventListener('pagehide',()=>{pauseTimer();saveState()})}
-function init(){normalizeState();refreshDeleteProfileGuard();if(window.SudokuOnline?.configured){reconcileOnlineIdentity();window.SudokuOnline.watchAuth(()=>reconcileOnlineIdentity()).catch(()=>{});}initPreview();wire();$('openReceivedInviteBtn').classList.toggle('hidden',!isInstalled());applyTexts();drawDailyFeature();$('installBanner').classList.toggle('hidden',isInstalled());deepLink=getChallengeParams();if(deepLink?.invalid){alert(tr('invalidLink'))}else if(deepLink){level=deepLink.level;applyTexts();start('challenge')}else if(showDailyInvitation()){}else if(state.active&&!state.active.finished){const a=state.active;if(a.mode==='daily'&&a.day!==date()){state.active=null;saveState();return}if(a.mode==='daily'&&!isInstalled()){openInstall();return}if(Array.isArray(a.values)&&a.values.length===36&&((a.dailyOnline&&a.solution===null)||(Array.isArray(a.solution)&&a.solution.length===36))){current=a;enterGame()}}initPullRefresh();watchServiceWorker();}
+function wire(){LANGS.forEach(([code,name])=>{let opt=document.createElement('option');opt.value=code;opt.textContent=name;$('language').append(opt)});$('language').onchange=e=>changeLanguage(e.target.value);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{level=b.dataset.level;applyTexts();drawDailyFeature()});$('freeBtn').onclick=()=>start('free');$('oneVsOneBtn').onclick=askVs1;$('vs1Stake').onchange=()=>{$('vs1CustomRow').hidden=$('vs1Stake').value!=='custom'};$('vs1CustomText').oninput=()=>{$('vs1Count').textContent=Array.from($('vs1CustomText').value).length};$('vs1Start').onclick=startVs1;$('vs1ShareBtn').onclick=shareVs1;$('vs1CopyBtn').onclick=copyVs1Link;$('vs1PendingInviteBtn').onclick=()=>{updateVs1Share();openDialog('vs1CreatedDialog')};$('vs1InviteAccept').onclick=startVs1Opponent;$('vs1ResultHome').onclick=()=>{closeDialog('vs1ResultDialog');show('home')};$('vs1ResultInstall').onclick=()=>{closeDialog('vs1ResultDialog');openInstall()};$('vs1CreatedHome').onclick=()=>{closeDialog('vs1CreatedDialog');show('home')};$('dailyBtn').onclick=askDaily;$('dailyConfirmStart').onclick=confirmDaily;$('rankingBtn').onclick=()=>show('ranking');$('statsBtn').onclick=()=>show('statsScreen');$('rulesBtn').onclick=$('rulesGameBtn').onclick=()=>{renderRules();openDialog('rulesDialog')};$('shareAppBtn').onclick=()=>openShare(true);$('deleteProfileOpenBtn').onclick=showDeleteProfile;$('deleteProfileAgree').onchange=()=>{$('deleteProfileConfirmBtn').disabled=deletingProfile||!$('deleteProfileAgree').checked};$('deleteProfileConfirmBtn').onclick=confirmDeleteProfile;$('deleteProfileCancelBtn').onclick=()=>{if(!deletingProfile)closeDialog('deleteProfileDialog')};$('privacyHomeBtn').onclick=()=>{refreshDeleteProfileGuard();openDialog('privacyDialog')};$('privacyProfileBtn').onclick=()=>{closeDialog('profileDialog');refreshDeleteProfileGuard();openDialog('privacyDialog')};$('checkUpdatesBtn').onclick=()=>checkForUpdate(false);$('updateLater').onclick=()=>closeDialog('updateDialog');$('updateNow').onclick=applyUpdate;$('installBtn').onclick=openInstall;document.querySelectorAll('[data-back]').forEach(b=>b.onclick=goHome);$('rankingTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{rankedLevel=b.dataset.rank;drawRanking()});$('editProfileBtn').onclick=()=>{drawProfile();openDialog('profileDialog');window.SudokuPush?.refresh().catch(()=>{})};$('rankDailyBtn').onclick=()=>{level=rankedLevel;applyTexts();start('daily')};$('rankShareBtn').onclick=shareDailyFromRanking;$('winRanking').onclick=()=>{closeDialog('winDialog');rankedLevel=current?.level||level;show('ranking')};$('dailyAlreadyShare').onclick=()=>{const key=state.daily[todayKey(rankedLevel)];const score=dailyShareRecord?.score??key?.score;if(!Number.isFinite(score)){closeDialog('dailyAlreadyDialog');show('ranking');return}shareData=getDailyShare(rankedLevel,score);closeDialog('dailyAlreadyDialog');openDialog('shareDialog')};$('dailyAlreadyRanking').onclick=()=>{closeDialog('dailyAlreadyDialog');show('ranking')};$('inviteStart').onclick=()=>{closeDialog('dailyInviteDialog');askDaily()};$('iosInviteCopy').onclick=copyDailyInvitation;$('openReceivedInviteBtn').onclick=openReceivedInvitation;$('dailyAlreadyHome').onclick=()=>{closeDialog('dailyAlreadyDialog');show('home')};$('inviteHome').onclick=()=>{closeDialog('dailyInviteDialog');show('home')};$('profileForm').onsubmit=saveProfile;$('linkEmailBtn').onclick=linkProfileEmail;$('recoverEmailBtn').onclick=recoverProfileEmail;$('nickname').addEventListener('input',updatePreview);$('country').addEventListener('change',updatePreview);document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeDialog(b.dataset.close));$('numkeys').innerHTML=Array.from({length:6},(_,i)=>`<button type="button">${i+1}</button>`).join('');$('numkeys').querySelectorAll('button').forEach((b,i)=>b.onclick=()=>enterNumber(i+1));$('eraseBtn').onclick=erase;$('notesBtn').onclick=()=>{noteMode=!noteMode;applyTexts();$('notesBtn').classList.toggle('active',noteMode)};$('hintBtn').onclick=hint;$('stepPrev').onclick=()=>{step=Math.max(0,step-1);drawStep()};$('stepNext').onclick=()=>{if(step===4)closeDialog('installDialog');else{step++;drawStep()}};$('installConfirm').onclick=requestInstall;$('winNew').onclick=()=>{closeDialog('winDialog');start('free')};$('winHome').onclick=()=>{closeDialog('winDialog');show('home')};$('winShare').onclick=()=>{closeDialog('winDialog');openShare(false)};$('whatsappBtn').onclick=shareWhatsApp;$('nativeShareBtn').onclick=shareNative;$('copyLinkBtn').onclick=copyLink;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e});window.addEventListener('appinstalled',()=>{$('installBanner').classList.add('hidden');closeDialog('installDialog')});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')pauseTimer();else if(current&&!current.finished&&$('game').classList.contains('active'))startTimer()});window.addEventListener('pagehide',()=>{pauseTimer();saveState()})}
+function init(){normalizeState();refreshDeleteProfileGuard();if(window.SudokuOnline?.configured){reconcileOnlineIdentity();window.SudokuOnline.watchAuth(()=>reconcileOnlineIdentity()).catch(()=>{});}initPreview();wire();$('openReceivedInviteBtn').classList.toggle('hidden',!isInstalled());applyTexts();drawDailyFeature();updateVs1Share();$('installBanner').classList.toggle('hidden',isInstalled());vs1Invitation=vs1Query();deepLink=vs1Invitation?null:getChallengeParams();if(vs1Invitation&&state.active?.mode==='vs1_opponent'&&state.active.vs1ChallengeId===vs1Invitation.challenge_id){current=state.active;enterGame()}else if(vs1Invitation){openVs1Invitation()}else if(deepLink?.invalid){alert(tr('invalidLink'))}else if(deepLink){level=deepLink.level;applyTexts();start('challenge')}else if(showDailyInvitation()){}else if(state.active&&!state.active.finished){const a=state.active;if(a.mode==='daily'&&a.day!==date()){state.active=null;saveState();return}if(a.mode==='daily'&&!isInstalled()){openInstall();return}if(Array.isArray(a.values)&&a.values.length===36&&((a.dailyOnline&&a.solution===null)||(['vs1_creator','vs1_opponent'].includes(a.mode)&&a.solution===null)||(Array.isArray(a.solution)&&a.solution.length===36))){current=a;enterGame()}}initPullRefresh();watchServiceWorker();}
 init();
 })();
