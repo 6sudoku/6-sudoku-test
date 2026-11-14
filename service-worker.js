@@ -1,25 +1,51 @@
-/* 6 Sudoku TEST v0.12.9.5.3: cache isolate e navigazione limitata alla sottocartella TEST. */
-const CACHE='6-sudoku-test-v0129-5-3';
+/* 6 Sudoku TEST v0.12.9.5.4 — aggiornamento sicuro e cache offline. */
+const APP_VERSION='0.12.9.5.4';
+const CACHE='6-sudoku-test-v0129-5-4';
 const FILES=['./','./index.html','./manifest.webmanifest','./css/style.css','./js/sudoku.js','./js/languages.js','./js/app.js','./js/supabase-config.js','./js/supabase-profile.js','./js/push.js','./js/daily-reminder.js','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png'];
 const SCOPE=new URL(self.registration.scope);
 self.addEventListener('install',event=>{
- event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)));
- // L'aggiornamento avviene dopo la conferma dell'utente nella PWA.
+ event.waitUntil((async()=>{
+  const cache=await caches.open(CACHE);
+  await cache.addAll(FILES);
+  // Evita che un vecchio worker attivo impedisca l'aggiornamento dell'app.
+  await self.skipWaiting();
+ })());
 });
-self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting()});
+self.addEventListener('message',event=>{
+ if(event.data?.type==='SKIP_WAITING')self.skipWaiting();
+ if(event.data?.type==='GET_VERSION')event.ports?.[0]?.postMessage({version:APP_VERSION});
+});
 self.addEventListener('activate',event=>{
- event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('6-sudoku-test-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+ event.waitUntil((async()=>{
+  const keys=await caches.keys();
+  await Promise.all(keys.filter(k=>k.startsWith('6-sudoku-test-')&&k!==CACHE).map(k=>caches.delete(k)));
+  await self.clients.claim();
+ })());
 });
 self.addEventListener('fetch',event=>{
  if(event.request.method!=='GET')return;
  const url=new URL(event.request.url);
  if(url.origin!==SCOPE.origin||!url.pathname.startsWith(SCOPE.pathname))return;
- if(url.pathname.endsWith('/version.json')){event.respondWith(fetch(event.request,{cache:'no-store'}));return}
- if(event.request.mode==='navigate'){
-  event.respondWith(caches.match('./index.html').then(cached=>cached||fetch(event.request)));
-  return;
+ if(url.pathname.endsWith('/version.json')){
+  event.respondWith(fetch(event.request,{cache:'no-store'}));return;
  }
- event.respondWith(caches.match(event.request,{ignoreSearch:true}).then(hit=>hit||fetch(event.request)));
+ // Il browser cerca la rete prima della cache, in modo da non riproporre all'infinito una vecchia index.html.
+ // In assenza di rete resta disponibile la copia offline.
+ event.respondWith((async()=>{
+  const cache=await caches.open(CACHE);
+  try{
+   const response=await fetch(event.request,{cache:'no-store'});
+   if(response.ok&&response.type==='basic')await cache.put(event.request,response.clone());
+   return response;
+  }catch(err){
+   const cached=await cache.match(event.request,{ignoreSearch:true});
+   if(cached)return cached;
+   if(event.request.mode==='navigate'){
+    const offline=await cache.match('./index.html');if(offline)return offline;
+   }
+   throw err;
+  }
+ })());
 });
 
 // Manteniamo invariati i gestori push funzionanti nella versione precedente.
