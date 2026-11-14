@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id), E=window.SudokuEngine;
-const APP_VERSION='0.12.9.5.4', VERSION_URL='./version.json';
+const APP_VERSION='0.12.9.5.5', VERSION_URL='./version.json';
 const STORE='6sudoku-test-v012-state', LANGKEY='6sudoku-test-lang', PROFILEKEY='6sudoku-test-profile';
 const LEVELS=['beginner','intermediate','advanced','hero'];
 const LEVEL_LABELS={beginner:'🌱 ZEN',intermediate:'⚡ FOCUS',advanced:'💪 MASTER',hero:'👑 HERO'};
@@ -307,8 +307,14 @@ function vs1ArchiveFinished(info,remote){
 }
 function vs1RenderCompleted(info,remote){
  if(!info||remote?.state!=='completed')return;
- $('vs1CreatorResultTitle').textContent=tr(remote.winner==='creator'?'vs1CreatorWin':remote.winner==='opponent'?'vs1CreatorLost':'vs1CreatorTie');
- $('vs1CreatorResultName').textContent=remote.opponent_name||tr('vs1OpponentGeneric');
+ const opponent=remote.opponent_name||tr('vs1OpponentGeneric');
+ const outcome=remote.winner==='creator'?'win':remote.winner==='opponent'?'lose':'tie';
+ $('vs1CreatorResultTitle').textContent=tr(outcome==='win'?'vs1CreatorWin':outcome==='lose'?'vs1CreatorLost':'vs1CreatorTie');
+ $('vs1CreatorResultAgainst').textContent=tr('vs1Against',{name:opponent});
+ $('vs1CreatorResultName').textContent=opponent;
+ const stake=vs1OfferText(info.stake_kind||remote.stake_kind||'none',info.stake_text??remote.stake_text);
+ const stakeLabel=stake?tr(outcome==='win'?'vs1RewardWin':outcome==='lose'?'vs1RewardLose':'vs1RewardTie',{name:opponent,stake}):tr('vs1RewardNone');
+ $('vs1CreatorResultReward').textContent=stakeLabel;
  $('vs1CreatorResultMyTime').textContent=format(Math.ceil(remote.creator_elapsed_ms/1000));
  $('vs1CreatorResultTheirTime').textContent=format(Math.ceil(remote.opponent_elapsed_ms/1000));
  $('vs1CreatorResultGap').textContent=tr('vs1GapTime',{time:vs1GapFormat(Math.abs(remote.creator_elapsed_ms-remote.opponent_elapsed_ms))});
