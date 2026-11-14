@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id), E=window.SudokuEngine;
-const APP_VERSION='0.12.9.5.1', VERSION_URL='./version.json';
+const APP_VERSION='0.12.9.5.3', VERSION_URL='./version.json';
 const STORE='6sudoku-test-v012-state', LANGKEY='6sudoku-test-lang', PROFILEKEY='6sudoku-test-profile';
 const LEVELS=['beginner','intermediate','advanced','hero'];
 const LEVEL_LABELS={beginner:'🌱 ZEN',intermediate:'⚡ FOCUS',advanced:'💪 MASTER',hero:'👑 HERO'};
@@ -63,7 +63,11 @@ async function checkForUpdate(silent=false){
    pendingVersion=info.version;
    if(swRegistration)await swRegistration.update();
    updateFeedback('updateReady');showUpdateIfReady();
-  }else if(!silent)updateFeedback('alreadyLatest');
+  }else{
+   // Il numero dell'app installata coincide: non riproporre avvisi memorizzati.
+   pendingVersion=null;
+   if(!silent)updateFeedback('alreadyLatest');
+  }
  }catch(_){if(!silent)updateFeedback('updateOffline')}
  finally{checking=false}
 }
@@ -86,15 +90,34 @@ function watchServiceWorker(){
 }
 async function applyUpdate(){
  if(activeGame()||!$('home').classList.contains('active')){updateFeedback('updateInGame');closeDialog('updateDialog');return}
+ if(updating)return;
  updating=true;closeDialog('updateDialog');updateFeedback('updatePreparing');
  try{
-  if(!swRegistration||!navigator.serviceWorker.controller)throw Error('No active worker');
+  if(!swRegistration)throw Error('No registered worker');
   await swRegistration.update();
-  const worker=swRegistration.waiting;
-  if(!worker)throw Error('Update not ready');
-  worker.postMessage({type:'SKIP_WAITING'});
-  // controllerchange effettua il riavvio soltanto se la nuova cache è pronta.
- }catch(_){updating=false;updateFeedback('updateFailed')}
+  // Può essere ancora in installazione quando l'utente tocca Aggiorna ora.
+  let worker=swRegistration.waiting;
+  if(!worker&&swRegistration.installing){
+   const installing=swRegistration.installing;
+   await Promise.race([
+    new Promise(resolve=>{
+     if(installing.state==='installed'||installing.state==='redundant')return resolve();
+     installing.addEventListener('statechange',()=>{
+      if(installing.state==='installed'||installing.state==='redundant')resolve();
+     });
+    }),
+    new Promise((_,reject)=>setTimeout(()=>reject(Error('Install timeout')),15000))
+   ]);
+   worker=swRegistration.waiting;
+  }
+  if(worker){
+   worker.postMessage({type:'SKIP_WAITING'});
+   // L'evento controllerchange ricarica la pagina con i file della nuova versione.
+  }else if(swRegistration.active){
+   // Nessun worker in attesa: può essere già stato attivato (es. primo aggiornamento iOS).
+   location.reload();
+  }else throw Error('Update not ready');
+ }catch(err){console.warn('6 Sudoku update:',err);updating=false;updateFeedback('updateFailed')}
 }
 function initPullRefresh(){
  const indicator=document.createElement('div');indicator.className='update-pull';indicator.setAttribute('aria-hidden','true');document.body.append(indicator);
