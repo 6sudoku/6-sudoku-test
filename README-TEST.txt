@@ -1,1 +1,1 @@
-6 Sudoku v0.12.9.5 TEST. Prima pubblica l aggiornamento create-1vs1/index.ts presente nel pacchetto Supabase STEP 7. La versione ufficiale rimane invariata. Verificare stato in attesa, accettata, completata e notifica al creatore.
+6 Sudoku v0.12.9.5.1 TEST. Prima pubblica l aggiornamento create-1vs1/index.ts presente nel pacchetto Supabase STEP 7. La versione ufficiale rimane invariata. Verificare stato in attesa, accettata, completata e notifica al creatore.
