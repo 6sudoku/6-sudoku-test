@@ -123,3 +123,10 @@
 .vs1-link-wrap input{font-size:12px;direction:ltr;text-align:left;min-width:0;box-sizing:border-box;}
 .vs1-result-story{font-weight:600;line-height:1.5;margin:14px 0 8px;}
 #vs1ResultStake:empty{display:none;}
+
+/* v0.12.9.4 — sfida in attesa */
+.vs1-countdown{margin:14px auto;padding:12px 14px;border:1px solid #d5c6e8;border-radius:14px;background:#f4eff9;color:#573977;display:flex;flex-direction:column;align-items:center;gap:4px;max-width:340px}
+.vs1-countdown span{font-size:13px;font-weight:600}
+.vs1-countdown strong{font-size:32px;letter-spacing:.05em;font-variant-numeric:tabular-nums}
+#vs1CancelInvite{border-color:#b64c55;color:#9d3443;background:#fff;margin-top:6px}
+#vs1CancelInvite:disabled{opacity:.5}
