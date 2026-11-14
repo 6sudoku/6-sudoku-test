@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id), E=window.SudokuEngine;
-const APP_VERSION='0.12.9.0', VERSION_URL='./version.json';
+const APP_VERSION='0.12.9.1', VERSION_URL='./version.json';
 const STORE='6sudoku-test-v012-state', LANGKEY='6sudoku-test-lang', PROFILEKEY='6sudoku-test-profile';
 const LEVELS=['beginner','intermediate','advanced','hero'];
 const LEVEL_LABELS={beginner:'🌱 ZEN',intermediate:'⚡ FOCUS',advanced:'💪 MASTER',hero:'👑 HERO'};
@@ -160,7 +160,7 @@ function start(mode){if(mode==='daily'){askDaily();return}
  if(mode==='challenge'){if(!deepLink||deepLink.invalid){alert(tr('invalidLink'));return}current=buildGame('challenge',deepLink.level,deepLink.seed,deepLink.target)}
  else{current=buildGame('free',level,newSeed())}
  state.active=current;saveState();enterGame()}
-function enterGame(){selected=-1;noteMode=false;lastTick=Date.now();$('gameTitle').textContent=gameTitle();$('timer').textContent=format(current.elapsed);$('challengeBox').classList.toggle('hidden',current.target===null||current.target===undefined);$('beatTime').textContent=current.target===null?'':format(current.target);$('hintBtn').hidden=current.mode==='daily'||current.mode==='vs1_creator';$('feedback').textContent='';applyTexts();drawBoard();show('game');startTimer()}
+function enterGame(){selected=-1;noteMode=false;lastTick=Date.now();$('gameTitle').textContent=gameTitle();$('vs1GameDifficulty').classList.toggle('hidden',current.mode!=='vs1_creator');if(current.mode==='vs1_creator')$('vs1GameDifficulty').textContent=levelLabel(current.level);$('timer').textContent=format(current.elapsed);$('challengeBox').classList.toggle('hidden',current.target===null||current.target===undefined);$('beatTime').textContent=current.target===null?'':format(current.target);$('hintBtn').hidden=current.mode==='daily'||current.mode==='vs1_creator';$('feedback').textContent='';applyTexts();drawBoard();show('game');startTimer()}
 function startTimer(){clearInterval(timer);lastTick=Date.now();timer=setInterval(()=>{if(!current||current.finished||$('game').classList.contains('active')===false)return;if(document.visibilityState==='hidden'){lastTick=Date.now();return}const now=Date.now();const seconds=Math.floor((now-lastTick)/1000);if(seconds>0){current.elapsed+=seconds;lastTick+=seconds*1000;$('timer').textContent=format(current.elapsed);if(seconds||current.elapsed%5===0)saveState()}},250)}
 function pauseTimer(){clearInterval(timer);if(current&&!current.finished&&$('game').classList.contains('active')){let now=Date.now(),delta=document.visibilityState==='visible'?Math.floor((now-lastTick)/1000):0;if(delta>0)current.elapsed+=delta;saveState()}}
 function drawBoard(){if(!current)return;const el=$('board');el.replaceChildren();current.values.forEach((num,i)=>{const b=document.createElement('button');b.type='button';b.className='cell';b.setAttribute('role','gridcell');b.setAttribute('aria-label',`R${Math.floor(i/6)+1} C${i%6+1} ${num||'-'}`);if(current.puzzle[i])b.classList.add('fixed');if(i===selected)b.classList.add('selected');else if(selected>=0&&(Math.floor(i/6)===Math.floor(selected/6)||i%6===selected%6))b.classList.add('related');if(num&&E.candidates([...current.values.slice(0,i),0,...current.values.slice(i+1)],i).indexOf(num)<0)b.classList.add('wrong');if(num)b.textContent=num;else if(current.notes[i]?.length){const notes=document.createElement('span');notes.className='notes-grid';for(let n=1;n<=6;n++){const t=document.createElement('span');t.textContent=current.notes[i].includes(n)?n:'';notes.append(t)}b.append(notes)}b.addEventListener('click',()=>{selected=i;drawBoard()});el.append(b)})}
@@ -212,6 +212,8 @@ async function finishVs1(){
   save('6sudoku-test-vs1-last-created',{challenge_id:response.challenge_id,token:response.invite_token,expires_at:response.expires_at});
   state.active=null;save(STORE,state);
   $('vs1CreatedTime').textContent=format(current.elapsed);
+  $('vs1CreatedDifficulty').textContent=levelLabel(current.level);
+  $('feedback').textContent='';
   openDialog('vs1CreatedDialog');
  }catch(err){console.error('1vs1 finish:',err);$('feedback').textContent=tr('vs1Error')+' '+err.message;saveState();startTimer();}
  finally{vs1Busy=false}
