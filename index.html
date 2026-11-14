@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./assets/icon-192.png">
 <link rel="stylesheet" href="./css/style.css">
-<title>6 Sudoku TEST · v0.12.9.2</title>
+<title>6 Sudoku TEST · v0.12.9.3</title>
 <script src="./js/sudoku.js" defer></script>
 <script src="./js/languages.js" defer></script>
 <script src="./js/supabase-config.js" defer></script>
@@ -22,7 +22,7 @@
 <script src="./js/app.js" defer></script>
 </head>
 <body>
-<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.9.2 · Non è la versione ufficiale</div>
+<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.9.3 · Non è la versione ufficiale</div>
 <header class="topbar">
   <div class="brand"><img src="./assets/icon-192.png" alt="" width="43" height="43"><div><div class="brand-name">6 SUDOKU</div><div class="brand-sub">PLAY · THINK · ENJOY</div></div></div>
   <select id="language" class="lang" aria-label="Lingua"></select>
@@ -35,7 +35,7 @@
  <div class="daily-feature-top"><div class="daily-feature-icon" aria-hidden="true">🏆</div><div><div class="daily-feature-eyebrow" data-t="dailyUnique">UNA SOLA OCCASIONE AL GIORNO PER LIVELLO</div><h2 id="dailyFeatureHeading" data-t="daily">Sfida quotidiana</h2></div><span class="daily-feature-pill" data-t="dailyBadge">OGGI</span></div>
  <p data-t="dailyFeatureDesc">Uno schema uguale per tutti. Una sola possibilità per livello: ZEN, FOCUS, MASTER e HERO.</p>
  <div class="daily-feature-status" id="dailyFeatureStatus" aria-live="polite"></div>
- <button id="dailyBtn" class="btn daily-feature-button" data-t="dailyPlay">🏆 Partecipa alla sfida</button>
+ <button id="dailyBtn" class="btn daily-feature-button" data-t="dailyPlay">🏆 Partecipa alla sfida quotidiana</button>
 </section>
  <div class="overline level-caption" data-t="choose">SCEGLI LA DIFFICOLTÀ</div>
  <div class="levels" id="levels">
@@ -71,7 +71,7 @@
 </section>
 <section class="screen" id="statsScreen"><div class="screenbar"><button class="back" data-back="home">← <span data-t="home">Home</span></button></div><h2 class="screen-title" data-t="stats">Le mie statistiche</h2><p class="screen-desc" data-t="statsIntro">I tuoi progressi rimangono sul dispositivo.</p><div class="stat-grid"><div><strong id="statWins">0</strong><small data-t="completed">Schemi completati</small></div><div><strong id="statToday">0</strong><small data-t="today">Completati oggi</small></div><div><strong id="statBest">—</strong><small data-t="best">Tempo migliore</small></div><div><strong id="statDaily">0</strong><small data-t="dailyDone">Sfide quotidiane</small></div></div><p class="small-muted" data-t="statsNote">I dati non si sincronizzano fra dispositivi.</p></section>
 </main>
-<footer><div>6 SUDOKU TEST <strong>v0.12.9.2</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
+<footer><div>6 SUDOKU TEST <strong>v0.12.9.3</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
 </div>
 
 <dialog id="vs1InviteDialog" class="modal"><div class="modal-body win-modal">
@@ -87,7 +87,7 @@
 <dialog id="vs1ResultDialog" class="modal"><div class="modal-body win-modal">
 <div class="confetti-icon">🏆</div><h2 id="vs1ResultWinner">—</h2>
 <div class="vs1-score-pair"><div><small id="vs1ResultCreatorName">Sfidante</small><strong id="vs1ResultCreatorTime">—</strong></div><div><small data-t="vs1You">Tu</small><strong id="vs1ResultOpponentTime">—</strong></div></div>
-<p id="vs1ResultStake"></p>
+<p id="vs1ResultStory" class="vs1-result-story"></p><p id="vs1ResultStake" class="vs1-stake-banner"></p>
 <div id="vs1InstallAfter"><p data-t="vs1InstallCopy">Ti sei divertito? Installa 6 Sudoku sul telefono per giocare quando vuoi!</p><button class="btn secondary" id="vs1ResultInstall" type="button" data-t="vs1Install">📲 Installa 6 Sudoku</button></div>
 <button class="btn primary" id="vs1ResultHome" type="button" data-t="home">Home</button></div></dialog>
 <dialog id="vs1SetupDialog" class="modal"><div class="modal-body">
