@@ -169,10 +169,26 @@ function erase(){if(!current||selected<0||current.puzzle[selected])return;curren
 function hint(){if(!current)return;if(current.mode==='daily'||['vs1_creator','vs1_opponent'].includes(current.mode)){$('feedback').textContent=tr('noHintDaily');return}let i=selected;if(i<0||current.values[i]===current.solution[i])i=current.values.findIndex((v,j)=>v!==current.solution[j]);if(i<0)return;current.values[i]=current.solution[i];current.notes[i]=[];current.hints++;current.elapsed+=30;$('timer').textContent=format(current.elapsed);$('feedback').textContent=tr('hintUsed');drawBoard();saveState();if(current.values.every((v,j)=>v===current.solution[j]))win()}
 
 let vs1Busy=false,vs1Options=null;
-function askVs1(){
+async function askVs1(){
  if(!navigator.onLine||!window.SudokuOnline?.configured){alert(tr('vs1Offline'));return}
  if(!profile?.id||!profile.name){drawProfile();openDialog('profileDialog');return}
- const pending=vs1Stored();if(pending?.token&&(new Date(pending.expires_at).getTime()>Date.now()||vs1RemoteState?.state==='completed'||vs1RemoteState?.state==='playing')){updateVs1Share();openDialog('vs1CreatedDialog');void vs1RefreshStatus(true);return;}
+ if(vs1Busy)return;
+ // Prima interroghiamo il server: un invito completato non blocca una nuova sfida.
+ const pending=vs1Stored();
+ if(pending?.challenge_id){
+  await vs1RefreshStatus(true);
+  const remote=vs1RemoteState?.challenge_id===pending.challenge_id?vs1RemoteState:null;
+  if(remote?.state==='completed'||remote?.state==='cancelled'||remote?.state==='expired'){
+   vs1ArchiveFinished(pending,remote);
+  }else if(remote?.state==='playing'||new Date(pending.expires_at).getTime()>Date.now()){
+   updateVs1Share();openDialog('vs1CreatedDialog');return;
+  }else if(!remote){
+   // In caso di server non raggiungibile non rischiamo una seconda sfida attiva.
+   updateVs1Share();openDialog('vs1CreatedDialog');return;
+  }else{
+   vs1ArchiveFinished(pending,remote);
+  }
+ }
  $('vs1Status').textContent='';openDialog('vs1SetupDialog');
 }
 async function vs1Api(body){
@@ -209,6 +225,7 @@ async function finishVs1(){
   if(response.status!=='created'||!response.ok||!response.challenge_id)throw Error(response.reason||tr('vs1Error'));
   current.finished=true;current.elapsed=Math.ceil(Number(response.creator_elapsed_ms)/1000);
   // Il token è segreto e identifica l'invito: mostrarlo soltanto al creatore per la condivisione.
+  vs1RemoteState=null;vs1LastCheck=0;
   save('6sudoku-test-vs1-last-created',{challenge_id:response.challenge_id,token:response.invite_token,expires_at:response.expires_at,stake_kind:opts.stake_kind,stake_text:opts.stake_text,difficulty:current.level,creator_elapsed_ms:response.creator_elapsed_ms});
   state.active=null;save(STORE,state);
   $('vs1CreatedTime').textContent=format(current.elapsed);
@@ -240,6 +257,54 @@ async function vs1OpponentApi(body){
 }
 function vs1Stored(){return read('6sudoku-test-vs1-last-created',null)}
 let vs1RemoteState=null,vs1StatusBusy=false,vs1LastCheck=0;
+const VS1_ARCHIVE='6sudoku-test-vs1-last-finished';
+function vs1ArchiveFinished(info,remote){
+ if(!info?.challenge_id)return;
+ if(remote?.state==='completed')save(VS1_ARCHIVE,{...info,remote});
+ if(vs1Stored()?.challenge_id===info.challenge_id)localStorage.removeItem('6sudoku-test-vs1-last-created');
+ if(vs1RemoteState?.challenge_id===info.challenge_id)vs1RemoteState=null;
+ updateVs1Share();
+}
+function vs1RenderCompleted(info,remote){
+ if(!info||remote?.state!=='completed')return;
+ $('vs1CreatorResultTitle').textContent=tr(remote.winner==='creator'?'vs1CreatorWin':remote.winner==='opponent'?'vs1CreatorLost':'vs1CreatorTie');
+ $('vs1CreatorResultName').textContent=remote.opponent_name||tr('vs1OpponentGeneric');
+ $('vs1CreatorResultMyTime').textContent=format(Math.ceil(remote.creator_elapsed_ms/1000));
+ $('vs1CreatorResultTheirTime').textContent=format(Math.ceil(remote.opponent_elapsed_ms/1000));
+ $('vs1CreatorResultGap').textContent=tr('vs1GapTime',{time:vs1GapFormat(Math.abs(remote.creator_elapsed_ms-remote.opponent_elapsed_ms))});
+ $('vs1CompletedPanel').classList.remove('hidden');
+ $('vs1CreatedIntro').classList.add('hidden');
+ $('vs1CreatedDetails').classList.add('hidden');
+ $('vs1CountdownBox').classList.add('hidden');
+ $('vs1PlayingNotice').classList.add('hidden');
+ $('vs1ShareLinkWrap').classList.add('hidden');
+ $('vs1ShareBtn').classList.add('hidden');
+ $('vs1CopyBtn').classList.add('hidden');
+ $('vs1CancelInvite').classList.add('hidden');
+ $('vs1ShareStatus').classList.add('hidden');
+ $('vs1CreatedHeading').textContent=tr('vs1ViewResult');
+}
+function vs1ResetDialog(){
+ for(const id of ['vs1CreatedIntro','vs1CreatedDetails','vs1ShareLinkWrap','vs1ShareStatus'])$(id).classList.remove('hidden');
+ $('vs1CreatedHeading').textContent=tr('vs1CreatedTitle');
+}
+async function vs1OpenNotificationResult(){
+ // Il risultato deve rimanere consultabile anche dopo l'avvio di una nuova sfida.
+ const archived=read(VS1_ARCHIVE,null);
+ const active=vs1Stored();
+ if(active?.challenge_id){
+  await vs1RefreshStatus(true);
+  if(vs1RemoteState?.challenge_id===active.challenge_id&&vs1RemoteState.state==='completed'){
+   updateVs1Share();openDialog('vs1CreatedDialog');return true;
+  }
+ }
+ if(archived?.remote?.state==='completed'){
+  vs1ResetDialog();
+  vs1RenderCompleted(archived,archived.remote);
+  openDialog('vs1CreatedDialog');return true;
+ }
+ return false;
+}
 function vs1RefreshCountdown(){
  const info=vs1Stored();const remaining=info?.expires_at?new Date(info.expires_at).getTime()-Date.now():0;
  const seconds=Math.max(0,Math.ceil(remaining/1000));
@@ -257,13 +322,8 @@ function vs1RefreshCountdown(){
  $('vs1CopyBtn').classList.toggle('hidden',hasOpponent||remote?.state==='cancelled');
  $('vs1CancelInvite').classList.toggle('hidden',hasOpponent||remote?.state==='cancelled');
  $('vs1CancelInvite').disabled=!(remaining>0&&info?.token&&!hasOpponent);
- if(remote?.state==='completed'){
-  $('vs1CreatorResultTitle').textContent=tr(remote.winner==='creator'?'vs1CreatorWin':remote.winner==='opponent'?'vs1CreatorLost':'vs1CreatorTie');
-  $('vs1CreatorResultName').textContent=remote.opponent_name||tr('vs1OpponentGeneric');
-  $('vs1CreatorResultMyTime').textContent=format(Math.ceil(remote.creator_elapsed_ms/1000));
-  $('vs1CreatorResultTheirTime').textContent=format(Math.ceil(remote.opponent_elapsed_ms/1000));
-  $('vs1CreatorResultGap').textContent=tr('vs1GapTime',{time:vs1GapFormat(Math.abs(remote.creator_elapsed_ms-remote.opponent_elapsed_ms))});
- }
+ if(remote?.state==='completed')vs1RenderCompleted(info,remote);
+ else vs1ResetDialog();
  const canReopen=Boolean(info?.challenge_id&&(remaining>0||hasOpponent));
  $('vs1PendingInviteBtn').classList.toggle('hidden',!canReopen);
  if(remote?.state==='completed')$('vs1PendingInviteBtn').textContent=tr('vs1ViewResult');
@@ -657,16 +717,12 @@ function refreshDeleteProfileGuard(){
  const button=$('deleteProfileOpenBtn');if(button)button.disabled=!canDeleteProfile();
  const note=$('deleteProfileGuard');if(note)note.textContent=tr(canDeleteProfile()?'deleteProfileSafety':'deleteProfileNeedProfile');
 }
-function wire(){LANGS.forEach(([code,name])=>{let opt=document.createElement('option');opt.value=code;opt.textContent=name;$('language').append(opt)});$('language').onchange=e=>changeLanguage(e.target.value);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{level=b.dataset.level;applyTexts();drawDailyFeature()});$('freeBtn').onclick=()=>start('free');$('oneVsOneBtn').onclick=askVs1;$('vs1Stake').onchange=()=>{$('vs1CustomRow').hidden=$('vs1Stake').value!=='custom'};$('vs1CustomText').oninput=()=>{$('vs1Count').textContent=Array.from($('vs1CustomText').value).length};$('vs1Start').onclick=startVs1;$('vs1ShareBtn').onclick=shareVs1;$('vs1CopyBtn').onclick=copyVs1Link;$('vs1CancelInvite').onclick=cancelVs1Invite;$('vs1PendingInviteBtn').onclick=()=>{updateVs1Share();openDialog('vs1CreatedDialog');void vs1RefreshStatus(true)};$('vs1InviteAccept').onclick=startVs1Opponent;$('vs1ResultHome').onclick=()=>{closeDialog('vs1ResultDialog');show('home')};$('vs1ResultInstall').onclick=()=>{closeDialog('vs1ResultDialog');openInstall()};$('vs1CreatedHome').onclick=()=>{closeDialog('vs1CreatedDialog');show('home')};$('dailyBtn').onclick=askDaily;$('dailyConfirmStart').onclick=confirmDaily;$('rankingBtn').onclick=()=>show('ranking');$('statsBtn').onclick=()=>show('statsScreen');$('rulesBtn').onclick=$('rulesGameBtn').onclick=()=>{renderRules();openDialog('rulesDialog')};$('shareAppBtn').onclick=()=>openShare(true);$('deleteProfileOpenBtn').onclick=showDeleteProfile;$('deleteProfileAgree').onchange=()=>{$('deleteProfileConfirmBtn').disabled=deletingProfile||!$('deleteProfileAgree').checked};$('deleteProfileConfirmBtn').onclick=confirmDeleteProfile;$('deleteProfileCancelBtn').onclick=()=>{if(!deletingProfile)closeDialog('deleteProfileDialog')};$('privacyHomeBtn').onclick=()=>{refreshDeleteProfileGuard();openDialog('privacyDialog')};$('privacyProfileBtn').onclick=()=>{closeDialog('profileDialog');refreshDeleteProfileGuard();openDialog('privacyDialog')};$('checkUpdatesBtn').onclick=()=>checkForUpdate(false);$('updateLater').onclick=()=>closeDialog('updateDialog');$('updateNow').onclick=applyUpdate;$('installBtn').onclick=openInstall;document.querySelectorAll('[data-back]').forEach(b=>b.onclick=goHome);$('rankingTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{rankedLevel=b.dataset.rank;drawRanking()});$('editProfileBtn').onclick=()=>{drawProfile();openDialog('profileDialog');window.SudokuPush?.refresh().catch(()=>{})};$('rankDailyBtn').onclick=()=>{level=rankedLevel;applyTexts();start('daily')};$('rankShareBtn').onclick=shareDailyFromRanking;$('winRanking').onclick=()=>{closeDialog('winDialog');rankedLevel=current?.level||level;show('ranking')};$('dailyAlreadyShare').onclick=()=>{const key=state.daily[todayKey(rankedLevel)];const score=dailyShareRecord?.score??key?.score;if(!Number.isFinite(score)){closeDialog('dailyAlreadyDialog');show('ranking');return}shareData=getDailyShare(rankedLevel,score);closeDialog('dailyAlreadyDialog');openDialog('shareDialog')};$('dailyAlreadyRanking').onclick=()=>{closeDialog('dailyAlreadyDialog');show('ranking')};$('inviteStart').onclick=()=>{closeDialog('dailyInviteDialog');askDaily()};$('iosInviteCopy').onclick=copyDailyInvitation;$('openReceivedInviteBtn').onclick=openReceivedInvitation;$('dailyAlreadyHome').onclick=()=>{closeDialog('dailyAlreadyDialog');show('home')};$('inviteHome').onclick=()=>{closeDialog('dailyInviteDialog');show('home')};$('profileForm').onsubmit=saveProfile;$('linkEmailBtn').onclick=linkProfileEmail;$('recoverEmailBtn').onclick=recoverProfileEmail;$('nickname').addEventListener('input',updatePreview);$('country').addEventListener('change',updatePreview);document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeDialog(b.dataset.close));$('numkeys').innerHTML=Array.from({length:6},(_,i)=>`<button type="button">${i+1}</button>`).join('');$('numkeys').querySelectorAll('button').forEach((b,i)=>b.onclick=()=>enterNumber(i+1));$('eraseBtn').onclick=erase;$('notesBtn').onclick=()=>{noteMode=!noteMode;applyTexts();$('notesBtn').classList.toggle('active',noteMode)};$('hintBtn').onclick=hint;$('stepPrev').onclick=()=>{step=Math.max(0,step-1);drawStep()};$('stepNext').onclick=()=>{if(step===4)closeDialog('installDialog');else{step++;drawStep()}};$('installConfirm').onclick=requestInstall;$('winNew').onclick=()=>{closeDialog('winDialog');start('free')};$('winHome').onclick=()=>{closeDialog('winDialog');show('home')};$('winShare').onclick=()=>{closeDialog('winDialog');openShare(false)};$('whatsappBtn').onclick=shareWhatsApp;$('nativeShareBtn').onclick=shareNative;$('copyLinkBtn').onclick=copyLink;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e});window.addEventListener('appinstalled',()=>{$('installBanner').classList.add('hidden');closeDialog('installDialog')});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')pauseTimer();else if(current&&!current.finished&&$('game').classList.contains('active'))startTimer()});window.addEventListener('pagehide',()=>{pauseTimer();saveState()});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&vs1Stored())void vs1RefreshStatus(true)})}
-function init(){normalizeState();refreshDeleteProfileGuard();if(window.SudokuOnline?.configured){reconcileOnlineIdentity();window.SudokuOnline.watchAuth(()=>reconcileOnlineIdentity()).catch(()=>{});}initPreview();wire();$('openReceivedInviteBtn').classList.toggle('hidden',!isInstalled());applyTexts();drawDailyFeature();updateVs1Share();setInterval(()=>{const info=vs1Stored();if(info){vs1RefreshCountdown();if($('vs1CreatedDialog').open)void vs1RefreshStatus()}},1000);$('installBanner').classList.toggle('hidden',isInstalled());vs1Invitation=vs1Query();deepLink=vs1Invitation?null:getChallengeParams();if(vs1Invitation&&state.active?.mode==='vs1_opponent'&&state.active.vs1ChallengeId===vs1Invitation.challenge_id){current=state.active;enterGame()}else if(vs1Invitation){openVs1Invitation()}else if(deepLink?.invalid){alert(tr('invalidLink'))}else if(deepLink){level=deepLink.level;applyTexts();start('challenge')}else if(showDailyInvitation()){}else if(state.active&&!state.active.finished){const a=state.active;if(a.mode==='daily'&&a.day!==date()){state.active=null;saveState();return}if(a.mode==='daily'&&!isInstalled()){openInstall();return}if(Array.isArray(a.values)&&a.values.length===36&&((a.dailyOnline&&a.solution===null)||(['vs1_creator','vs1_opponent'].includes(a.mode)&&a.solution===null)||(Array.isArray(a.solution)&&a.solution.length===36))){current=a;enterGame()}}if(vs1Stored())void vs1RefreshStatus(true);
-if(new URLSearchParams(location.search).get('vs1')==='result'&&vs1Stored()){
- const openResult=async()=>{
-  await vs1RefreshStatus(true);
-  if(vs1RemoteState?.state==='completed'){
-   updateVs1Share();openDialog('vs1CreatedDialog');
-  }
- };
- [800,2400,6000].forEach(delay=>setTimeout(()=>{if(!$('vs1CreatedDialog').open)void openResult()},delay));
+function wire(){LANGS.forEach(([code,name])=>{let opt=document.createElement('option');opt.value=code;opt.textContent=name;$('language').append(opt)});$('language').onchange=e=>changeLanguage(e.target.value);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{level=b.dataset.level;applyTexts();drawDailyFeature()});$('freeBtn').onclick=()=>start('free');$('oneVsOneBtn').onclick=askVs1;$('vs1Stake').onchange=()=>{$('vs1CustomRow').hidden=$('vs1Stake').value!=='custom'};$('vs1CustomText').oninput=()=>{$('vs1Count').textContent=Array.from($('vs1CustomText').value).length};$('vs1Start').onclick=startVs1;$('vs1ShareBtn').onclick=shareVs1;$('vs1CopyBtn').onclick=copyVs1Link;$('vs1CancelInvite').onclick=cancelVs1Invite;$('vs1PendingInviteBtn').onclick=async()=>{await vs1RefreshStatus(true);updateVs1Share();openDialog('vs1CreatedDialog')};$('vs1InviteAccept').onclick=startVs1Opponent;$('vs1ResultHome').onclick=()=>{closeDialog('vs1ResultDialog');show('home')};$('vs1ResultInstall').onclick=()=>{closeDialog('vs1ResultDialog');openInstall()};$('vs1CreatedHome').onclick=()=>{const info=vs1Stored();const remote=vs1RemoteState?.challenge_id===info?.challenge_id?vs1RemoteState:null;if(remote?.state==='completed'||remote?.state==='cancelled'||remote?.state==='expired')vs1ArchiveFinished(info,remote);closeDialog('vs1CreatedDialog');show('home')};$('dailyBtn').onclick=askDaily;$('dailyConfirmStart').onclick=confirmDaily;$('rankingBtn').onclick=()=>show('ranking');$('statsBtn').onclick=()=>show('statsScreen');$('rulesBtn').onclick=$('rulesGameBtn').onclick=()=>{renderRules();openDialog('rulesDialog')};$('shareAppBtn').onclick=()=>openShare(true);$('deleteProfileOpenBtn').onclick=showDeleteProfile;$('deleteProfileAgree').onchange=()=>{$('deleteProfileConfirmBtn').disabled=deletingProfile||!$('deleteProfileAgree').checked};$('deleteProfileConfirmBtn').onclick=confirmDeleteProfile;$('deleteProfileCancelBtn').onclick=()=>{if(!deletingProfile)closeDialog('deleteProfileDialog')};$('privacyHomeBtn').onclick=()=>{refreshDeleteProfileGuard();openDialog('privacyDialog')};$('privacyProfileBtn').onclick=()=>{closeDialog('profileDialog');refreshDeleteProfileGuard();openDialog('privacyDialog')};$('checkUpdatesBtn').onclick=()=>checkForUpdate(false);$('updateLater').onclick=()=>closeDialog('updateDialog');$('updateNow').onclick=applyUpdate;$('installBtn').onclick=openInstall;document.querySelectorAll('[data-back]').forEach(b=>b.onclick=goHome);$('rankingTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{rankedLevel=b.dataset.rank;drawRanking()});$('editProfileBtn').onclick=()=>{drawProfile();openDialog('profileDialog');window.SudokuPush?.refresh().catch(()=>{})};$('rankDailyBtn').onclick=()=>{level=rankedLevel;applyTexts();start('daily')};$('rankShareBtn').onclick=shareDailyFromRanking;$('winRanking').onclick=()=>{closeDialog('winDialog');rankedLevel=current?.level||level;show('ranking')};$('dailyAlreadyShare').onclick=()=>{const key=state.daily[todayKey(rankedLevel)];const score=dailyShareRecord?.score??key?.score;if(!Number.isFinite(score)){closeDialog('dailyAlreadyDialog');show('ranking');return}shareData=getDailyShare(rankedLevel,score);closeDialog('dailyAlreadyDialog');openDialog('shareDialog')};$('dailyAlreadyRanking').onclick=()=>{closeDialog('dailyAlreadyDialog');show('ranking')};$('inviteStart').onclick=()=>{closeDialog('dailyInviteDialog');askDaily()};$('iosInviteCopy').onclick=copyDailyInvitation;$('openReceivedInviteBtn').onclick=openReceivedInvitation;$('dailyAlreadyHome').onclick=()=>{closeDialog('dailyAlreadyDialog');show('home')};$('inviteHome').onclick=()=>{closeDialog('dailyInviteDialog');show('home')};$('profileForm').onsubmit=saveProfile;$('linkEmailBtn').onclick=linkProfileEmail;$('recoverEmailBtn').onclick=recoverProfileEmail;$('nickname').addEventListener('input',updatePreview);$('country').addEventListener('change',updatePreview);document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeDialog(b.dataset.close));$('numkeys').innerHTML=Array.from({length:6},(_,i)=>`<button type="button">${i+1}</button>`).join('');$('numkeys').querySelectorAll('button').forEach((b,i)=>b.onclick=()=>enterNumber(i+1));$('eraseBtn').onclick=erase;$('notesBtn').onclick=()=>{noteMode=!noteMode;applyTexts();$('notesBtn').classList.toggle('active',noteMode)};$('hintBtn').onclick=hint;$('stepPrev').onclick=()=>{step=Math.max(0,step-1);drawStep()};$('stepNext').onclick=()=>{if(step===4)closeDialog('installDialog');else{step++;drawStep()}};$('installConfirm').onclick=requestInstall;$('winNew').onclick=()=>{closeDialog('winDialog');start('free')};$('winHome').onclick=()=>{closeDialog('winDialog');show('home')};$('winShare').onclick=()=>{closeDialog('winDialog');openShare(false)};$('whatsappBtn').onclick=shareWhatsApp;$('nativeShareBtn').onclick=shareNative;$('copyLinkBtn').onclick=copyLink;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e});window.addEventListener('appinstalled',()=>{$('installBanner').classList.add('hidden');closeDialog('installDialog')});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')pauseTimer();else if(current&&!current.finished&&$('game').classList.contains('active'))startTimer()});window.addEventListener('pagehide',()=>{pauseTimer();saveState()});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&vs1Stored())void vs1RefreshStatus(true)})}
+function init(){navigator.serviceWorker?.addEventListener('message',event=>{if(event.data?.type==='VS1_OPEN_RESULT')void vs1OpenNotificationResult()});normalizeState();refreshDeleteProfileGuard();if(window.SudokuOnline?.configured){reconcileOnlineIdentity();window.SudokuOnline.watchAuth(()=>reconcileOnlineIdentity()).catch(()=>{});}initPreview();wire();$('openReceivedInviteBtn').classList.toggle('hidden',!isInstalled());applyTexts();drawDailyFeature();updateVs1Share();setInterval(()=>{const info=vs1Stored();if(info){vs1RefreshCountdown();if($('vs1CreatedDialog').open)void vs1RefreshStatus()}},1000);$('installBanner').classList.toggle('hidden',isInstalled());vs1Invitation=vs1Query();deepLink=vs1Invitation?null:getChallengeParams();if(vs1Invitation&&state.active?.mode==='vs1_opponent'&&state.active.vs1ChallengeId===vs1Invitation.challenge_id){current=state.active;enterGame()}else if(vs1Invitation){openVs1Invitation()}else if(deepLink?.invalid){alert(tr('invalidLink'))}else if(deepLink){level=deepLink.level;applyTexts();start('challenge')}else if(showDailyInvitation()){}else if(state.active&&!state.active.finished){const a=state.active;if(a.mode==='daily'&&a.day!==date()){state.active=null;saveState();return}if(a.mode==='daily'&&!isInstalled()){openInstall();return}if(Array.isArray(a.values)&&a.values.length===36&&((a.dailyOnline&&a.solution===null)||(['vs1_creator','vs1_opponent'].includes(a.mode)&&a.solution===null)||(Array.isArray(a.solution)&&a.solution.length===36))){current=a;enterGame()}}if(vs1Stored())void vs1RefreshStatus(true);
+if(new URLSearchParams(location.search).get('vs1')==='result'){
+ [800,2400,6000].forEach(delay=>setTimeout(()=>{if(!$('vs1CreatedDialog').open)void vs1OpenNotificationResult()},delay));
+ // Rimuove il parametro così i futuri avvii normali non riaprono il risultato.
+ const clean=new URL(location.href);clean.searchParams.delete('vs1');history.replaceState(null,'',clean.href);
 }
 initPullRefresh();watchServiceWorker();}
 init();
