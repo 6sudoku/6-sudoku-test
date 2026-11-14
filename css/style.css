@@ -98,3 +98,8 @@
 .delete-profile-modal .btn{width:100%;margin-top:10px}
 .delete-profile-modal .btn.danger{background:#a43f39;color:white;border-color:#a43f39}
 .delete-profile-modal .btn.danger:disabled{opacity:.4;cursor:not-allowed}
+
+/* Creator 1 VS 1 TEST */
+#vs1SetupDialog .wide-select {width:100%;padding:12px;border:1px solid #cbd5c7;border-radius:12px;background:white;margin:8px 0 10px;min-height:44px}
+#vs1SetupDialog textarea {display:block;width:100%;box-sizing:border-box;padding:12px;border:1px solid #cbd5c7;border-radius:12px}
+#oneVsOneBtn {margin-top:9px}
