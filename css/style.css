@@ -108,3 +108,13 @@
 #oneVsOneBtn.btn.vs1-home-button{background:#76559c;border:1px solid #654887;color:#fff;font-size:14px;min-height:48px}
 #oneVsOneBtn.btn.vs1-home-button:focus-visible{outline-color:#a88bc9}
 .vs1-difficulty{width:fit-content;margin:8px auto 12px;border:1px solid #c7b6dc;background:#eee9f5;color:#593a78;border-radius:999px;padding:6px 15px;font-size:13px;font-weight:800;letter-spacing:.02em;text-align:center}
+
+/* 1 VS 1: invito universale, risultati e condivisione */
+.vs1-link-wrap {margin:12px 0;}
+.vs1-link-wrap input {width:100%;padding:12px;border-radius:9px;border:1px solid var(--border,#ccc);font-size:12px;}
+.vs1-stake-banner {border-radius:13px;padding:12px;margin:12px 0;background:rgba(147,113,183,.12)}
+.vs1-stake-banner p {margin:6px 0 0;overflow-wrap:anywhere}
+.vs1-score-pair {display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.vs1-score-pair > div {padding:12px 8px;background:rgba(147,113,183,.13);border-radius:12px;display:flex;flex-direction:column;gap:5px}
+.vs1-score-pair strong {font-size:1.65rem;font-variant-numeric:tabular-nums}
+.vs1-score-pair small {overflow-wrap:anywhere}
