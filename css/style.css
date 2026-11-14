@@ -135,3 +135,13 @@
 .vs1-status-note{border-radius:13px;background:#eee9f5;color:#573977;border:1px solid #ccb9e3;padding:15px;font-size:15px;font-weight:800;margin:14px 0;text-align:center}
 .vs1-completed-panel{border-radius:15px;background:#f7f3fb;border:1px solid #ccb9e3;padding:15px 12px;margin:14px 0;text-align:center}
 .vs1-completed-panel h3{color:#573977;margin:3px 0 8px}
+
+/* v0.12.9.5.2 — iOS: dialog e contenuti sempre entro il viewport */
+#vs1CreatedDialog{box-sizing:border-box;width:min(420px,calc(100vw - 28px));max-width:calc(100vw - 28px);overflow-x:hidden}
+#vs1CreatedDialog .modal-body{box-sizing:border-box;width:100%;min-width:0;overflow-x:hidden}
+#vs1CreatedDialog .modal-body>*{max-width:100%;box-sizing:border-box}
+#vs1CreatedDialog .vs1-score-pair{grid-template-columns:repeat(2,minmax(0,1fr))}
+#vs1CreatedDialog .vs1-score-pair>div{min-width:0}
+#vs1CreatedDialog .vs1-score-pair strong{font-size:clamp(1.1rem,5.3vw,1.65rem);overflow-wrap:anywhere}
+#vs1CreatedDialog .vs1-link-wrap input{box-sizing:border-box;width:100%;min-width:0}
+#vs1CreatedDialog h2{overflow-wrap:anywhere}
