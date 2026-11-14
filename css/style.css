@@ -103,3 +103,8 @@
 #vs1SetupDialog .wide-select {width:100%;padding:12px;border:1px solid #cbd5c7;border-radius:12px;background:white;margin:8px 0 10px;min-height:44px}
 #vs1SetupDialog textarea {display:block;width:100%;box-sizing:border-box;padding:12px;border:1px solid #cbd5c7;border-radius:12px}
 #oneVsOneBtn {margin-top:9px}
+
+/* TEST v0.12.9.1: la modalità 1 VS 1 riprende il viola di HERO. */
+#oneVsOneBtn.btn.vs1-home-button{background:#76559c;border:1px solid #654887;color:#fff;font-size:14px;min-height:48px}
+#oneVsOneBtn.btn.vs1-home-button:focus-visible{outline-color:#a88bc9}
+.vs1-difficulty{width:fit-content;margin:8px auto 12px;border:1px solid #c7b6dc;background:#eee9f5;color:#593a78;border-radius:999px;padding:6px 15px;font-size:13px;font-weight:800;letter-spacing:.02em;text-align:center}
