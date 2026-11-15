@@ -34,28 +34,28 @@
   status('pushReady');$('pushEnableBtn').classList.remove('hidden');$('pushTestBtn').classList.add('hidden');$('pushDisableBtn').classList.add('hidden');
  }
  async function enable(){
-  if(busy)return;
-  if(!$('profileNotif')?.checked){status('pushPreferenceOff');return;}
-  if(!supported()){status('pushUnsupported');return;}
-  if(isIOS()&&!installed()){status('pushInstallFirst');return;}
-  if(Notification.permission==='denied'){status('pushBlocked');return;}
+  if(busy)return false;
+  if(!$('profileNotif')?.checked){status('pushPreferenceOff');return false;}
+  if(!supported()){status('pushUnsupported');return false;}
+  if(isIOS()&&!installed()){status('pushInstallFirst');return false;}
+  if(Notification.permission==='denied'){status('pushBlocked');return false;}
   busy=true; $('pushEnableBtn').disabled=true; status('pushRegistering');
   try{
    // Richiesta permesso avviata direttamente dal click del giocatore.
-   const permission=await Notification.requestPermission();
-   if(permission!=='granted'){status('pushNotAllowed');return;}
+   const permission=Notification.permission==='granted'?'granted':await Notification.requestPermission();
+   if(permission!=='granted'){status('pushNotAllowed');return false;}
    if(!window.SudokuOnline?.configured)throw Error('Supabase not configured');
    if(typeof window.SudokuOnline?.getClient !== 'function') throw Error('Supabase client unavailable');
   const db=await window.SudokuOnline.getClient();
    const {data:{session}}=await db.auth.getSession();
-   if(!session) {status('pushProfileFirst');return;}
+   if(!session) {status('pushProfileFirst');return false;}
    const reg=await navigator.serviceWorker.ready;
    let sub=await reg.pushManager.getSubscription();
    if(sub){const existingKey=sub.options?.applicationServerKey; if(existingKey){const a=new Uint8Array(existingKey);const b=base64ToBytes(VAPID_PUBLIC);if(a.length!==b.length||a.some((v,i)=>v!==b[i])){await sub.unsubscribe();sub=null;}}}
    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64ToBytes(VAPID_PUBLIC)});
    await invoke({action:'subscribe',subscription:sub.toJSON()});
-   status('pushActive');await refresh();
-  }catch(e){console.error('6 Sudoku push subscribe error',e);status('pushError');}
+   status('pushActive');await refresh();return true;
+  }catch(e){console.error('6 Sudoku push subscribe error',e);status('pushError');return false;}
   finally{busy=false; $('pushEnableBtn').disabled=false;}
  }
  async function test(){if(busy)return;busy=true;status('pushSending');try{await invoke({action:'test'});status('pushSent')}catch(e){console.error('6 Sudoku push test error',e);status('pushError')}finally{busy=false}}
@@ -71,5 +71,5 @@
   $('profileNotif')?.addEventListener('change',()=>{if(!$('profileNotif').checked)status('pushPreferenceOff');else refresh()});
   refresh().catch(()=>{});
  });
- window.SudokuPush={refresh};
+ window.SudokuPush={refresh,enable};
 })();

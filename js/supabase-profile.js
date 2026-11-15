@@ -46,6 +46,16 @@
   return {userId:uid};
  }
 
+ async function enableProfileNotifications(){
+  const db=await getClient();
+  const {data:{session},error:sessionError}=await db.auth.getSession();
+  if(sessionError||!session)throw sessionError||Error('No active session');
+  const prefs={notify_invites:true,notify_results:true,notify_rematches:true,notify_important:true};
+  const {error}=await db.from('profile_settings').update(prefs).eq('user_id',session.user.id);
+  if(error)throw error;
+  return true;
+ }
+
  // Le email appartengono SOLO a Supabase Auth, mai alla tabella pubblica profiles.
  // L'associazione preserva l'ID esistente. I link di conferma sono inviati da SMTP.
  async function accountState(){
@@ -81,7 +91,7 @@
   if(e)throw e;
   return result;
  }
- window.SudokuOnline={configured,getClient,get connected(){return !!client},restore,saveProfile,accountState,linkEmail,sendRecovery,fetchVerifiedProfile,
+ window.SudokuOnline={configured,getClient,get connected(){return !!client},restore,saveProfile,enableProfileNotifications,accountState,linkEmail,sendRecovery,fetchVerifiedProfile,
   async watchAuth(callback){const db=await getClient();return db.auth.onAuthStateChange((event)=>{
     if(event==='SIGNED_IN'||event==='USER_UPDATED'||event==='TOKEN_REFRESHED'){
       // Aspetta la conclusione del callback Supabase prima di chiamare altre API.
