@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./assets/icon-192.png">
 <link rel="stylesheet" href="./css/style.css">
-<title>6 Sudoku TEST · v0.12.9.5.6</title>
+<title>6 Sudoku TEST · v0.12.9.5.7</title>
 <script src="./js/sudoku.js" defer></script>
 <script src="./js/languages.js" defer></script>
 <script src="./js/supabase-config.js" defer></script>
@@ -22,7 +22,7 @@
 <script src="./js/app.js" defer></script>
 </head>
 <body>
-<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.9.5.6 · Non è la versione ufficiale</div>
+<div class="app"><div class="test-banner" role="status">🧪 AMBIENTE DI PROVA · 6 Sudoku v0.12.9.5.7 · Non è la versione ufficiale</div>
 <header class="topbar">
   <div class="brand"><img src="./assets/icon-192.png" alt="" width="43" height="43"><div><div class="brand-name">6 SUDOKU</div><div class="brand-sub">PLAY · THINK · ENJOY</div></div></div>
   <select id="language" class="lang" aria-label="Lingua"></select>
@@ -46,7 +46,7 @@
  <div class="home-actions"><button id="freeBtn" class="btn primary" data-t="play">Inizia una partita libera</button><button id="oneVsOneBtn" class="btn vs1-home-button" data-t="vs1Button">⚔️ Sfida 1 VS 1 · PROVA</button><button id="rankingBtn" class="btn secondary" data-t="ranking">🏆 Classifica mondiale</button></div>
  <div class="install-banner" id="installBanner"><img src="./assets/icon-192.png" width="43" height="43" alt=""><div><strong data-t="install">Installa 6 Sudoku</strong><small data-t="installDesc">Installa l'app per giocare più comodamente.</small></div><button id="installBtn" class="btn primary compact" data-t="installButton">Installa</button></div>
  <div class="update-controls"><button type="button" id="checkUpdatesBtn" class="text-button update-check" data-t="checkUpdates">↻ Controlla aggiornamenti</button><span id="updateFeedback" class="update-feedback" role="status" aria-live="polite"></span></div>
- <div class="home-links"><button class="text-button" id="rulesBtn" data-t="rules">❓ Come si gioca?</button><button class="text-button" id="statsBtn" data-t="stats">📊 Le mie statistiche</button><button class="text-button" id="shareAppBtn" data-t="shareApp">📲 Condividi l’app</button></div><button type="button" class="btn secondary received-invite-btn hidden" id="openReceivedInviteBtn" data-t="openReceivedInvite">📩 Apri invito ricevuto</button>
+ <div class="home-links"><button class="text-button" id="rulesBtn" data-t="rules">❓ Come si gioca?</button><button class="text-button" id="statsBtn" data-t="stats">📊 Le mie statistiche</button><button class="text-button" id="homeProfileBtn" data-t="homeProfile">👤 Il mio profilo</button><button class="text-button" id="shareAppBtn" data-t="shareApp">📲 Condividi l’app</button></div><button type="button" class="btn secondary received-invite-btn hidden" id="openReceivedInviteBtn" data-t="openReceivedInvite">📩 Apri invito ricevuto</button>
 <button type="button" class="btn secondary hidden" id="vs1PendingInviteBtn" data-t="vs1Pending">⚔️ Condividi la tua sfida</button><button type="button" class="text-button privacy-link" id="privacyHomeBtn" data-t="privacyOpen">🔒 Privacy e sicurezza</button>
 </section>
 <section class="screen" id="game">
@@ -71,7 +71,7 @@
 </section>
 <section class="screen" id="statsScreen"><div class="screenbar"><button class="back" data-back="home">← <span data-t="home">Home</span></button></div><h2 class="screen-title" data-t="stats">Le mie statistiche</h2><p class="screen-desc" data-t="statsIntro">I tuoi progressi rimangono sul dispositivo.</p><div class="stat-grid"><div><strong id="statWins">0</strong><small data-t="completed">Schemi completati</small></div><div><strong id="statToday">0</strong><small data-t="today">Completati oggi</small></div><div><strong id="statBest">—</strong><small data-t="best">Tempo migliore</small></div><div><strong id="statDaily">0</strong><small data-t="dailyDone">Sfide quotidiane</small></div></div><p class="small-muted" data-t="statsNote">I dati non si sincronizzano fra dispositivi.</p></section>
 </main>
-<footer><div>6 SUDOKU TEST <strong>v0.12.9.5.6</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
+<footer><div>6 SUDOKU TEST <strong>v0.12.9.5.7</strong> · <span data-t="footer">UN PICCOLO GRANDE GIOCO DI LOGICA</span></div><div><span data-t="author">Ideato e sviluppato da</span> <a href="mailto:ondefx@gmail.com?subject=Info%20per%206sudoku">Alessandro</a></div></footer>
 </div>
 
 <dialog id="vs1InviteDialog" class="modal"><div class="modal-body win-modal">
@@ -132,30 +132,35 @@
 <dialog id="profileDialog" class="modal"><div class="modal-body"><button class="close" data-close="profileDialog" aria-label="Chiudi">×</button><div class="modal-emblem">👤</div><h2 data-t="profileTitle">Il tuo nome di gioco</h2><p class="modal-intro" data-t="profileInfo">Scegli un nickname per la Sfida quotidiana. Il Paese è facoltativo.</p><form id="profileForm"><label for="nickname" data-t="nickname">Nickname</label><input id="nickname" maxlength="20" minlength="2" autocomplete="nickname" required placeholder="Nickname"><label for="country" data-t="country">Paese (facoltativo)</label><select id="country"></select><div class="profile-preview"><span data-t="preview">Anteprima</span><strong id="namePreview">—</strong></div>
 <div class="profile-section">
   <div class="profile-section-title" data-t="profileNotifs">3. Notifiche</div>
-  <label class="profile-check"><input type="checkbox" id="profileNotif" checked><span data-t="profileNotifsDesc">Inviti, risultati, rivincite e promemoria giornalieri. Il permesso push verrà richiesto separatamente.</span></label>
+  <label class="profile-check"><input type="checkbox" id="profileNotif" checked><span data-t="profileNotifsDesc">Inviti e notifiche del gioco. Il permesso sul dispositivo viene richiesto separatamente.</span></label>
+  <div class="push-controls">
+    <button type="button" class="btn secondary" id="pushEnableBtn" data-t="pushEnable">Attiva notifiche sul dispositivo</button>
+    <button type="button" class="btn secondary hidden" id="pushTestBtn" data-t="pushTest">Invia notifica di prova</button>
+    <button type="button" class="text-button hidden" id="pushDisableBtn" data-t="pushDisable">Disattiva su questo dispositivo</button>
+    <p id="pushStatus" class="profile-help profile-status" role="status" aria-live="polite"></p>
+  </div>
   <div class="daily-reminder-preference" style="margin:12px 0;padding:12px;border:1px solid #d4ddd0;border-radius:12px;">
     <label class="profile-check" for="dailyReminderOptIn"><input type="checkbox" id="dailyReminderOptIn" disabled><span data-t="dailyReminderOptIn">🧩 Ricordami di giocare. Facoltativo.</span></label>
     <div id="dailyReminderHourRow" hidden style="margin-top:10px"><label for="dailyReminderHour" data-t="dailyReminderTimeLabel">A che ora vuoi il promemoria?</label><select id="dailyReminderHour" disabled style="width:100%;min-height:42px"></select></div>
     <p class="profile-help" id="dailyReminderStatus" role="status" aria-live="polite" data-t="dailyReminderLoading">Controllo la tua scelta…</p>
   </div>
-  <div class="push-controls">
-    <button type="button" class="btn secondary" id="pushEnableBtn" data-t="pushEnable">Attiva notifiche sul dispositivo</button>
-    <button type="button" class="btn secondary hidden" id="pushTestBtn" data-t="pushTest">Invia notifica di prova</button>
-    <button type="button" class="text-button hidden" id="pushDisableBtn" data-t="pushDisable">Disattiva su questo dispositivo</button>
-    <p id="pushStatus" class="profile-help" role="status" aria-live="polite"></p>
-  </div>
+
 </div>
+<div id="profileConnection" class="profile-help profile-status" role="status" aria-live="polite"></div>
+<div id="profileCaptcha" class="profile-captcha"></div>
+<button class="btn primary profile-continue" id="saveProfileBtn" type="submit" data-t="saveProfile">Salva e continua</button>
+<div id="profileNextStep" class="profile-next-step hidden" aria-live="polite">
+<p id="profileSavedFeedback" class="profile-status" role="status" data-t="profileSavedNext">✅ Profilo salvato. La protezione tramite email è facoltativa.</p>
 <div class="profile-section"><div class="profile-section-title" data-t="profileProtect">4. Proteggi il tuo profilo</div>
 <label for="profileEmail" data-t="profileEmail">Email (facoltativa)</label><input type="email" id="profileEmail" autocomplete="email" placeholder="nome@esempio.it">
 <p class="profile-help" data-t="profileEmailHelp">Associa un'email per recuperare il profilo quando cambi dispositivo. Non è obbligatoria.</p>
-<div id="emailProtectionStatus" class="profile-help" role="status" aria-live="polite"></div>
+<div id="emailProtectionStatus" class="profile-help profile-status" role="status" aria-live="polite"></div>
 <button type="button" class="btn secondary" id="linkEmailBtn" data-t="emailLinkButton">Invia link di verifica</button>
 <div class="profile-recovery"><p class="profile-help" data-t="emailRecoveryHelp">Hai già protetto il tuo profilo? Puoi recuperarlo tramite email, anche su un nuovo dispositivo.</p>
 <label for="recoveryEmail" data-t="emailRecoveryLabel">Email del profilo da recuperare</label><input type="email" id="recoveryEmail" autocomplete="email" placeholder="nome@esempio.it">
 <button type="button" class="btn secondary" id="recoverEmailBtn" data-t="emailRecoveryButton">Recupera profilo</button></div></div>
 <div class="profile-section"><button type="button" class="btn secondary" id="privacyProfileBtn" data-t="privacyOpen">🔒 Privacy e sicurezza</button></div>
-<div id="profileConnection" class="profile-help" role="status" aria-live="polite"></div><div id="profileCaptcha" class="profile-captcha"></div>
-<button class="btn primary" id="saveProfileBtn" type="submit" data-t="saveProfile">Salva e continua</button></form></div></dialog>
+<button class="btn primary" id="profileDoneBtn" type="button" data-t="profileDone">Torna al gioco</button></div></form></div></dialog>
 <dialog id="winDialog" class="modal"><div class="modal-body win-modal"><div class="confetti-icon">🏆</div><div class="overline" data-t="completedTitle">SCHEMA COMPLETATO</div><h2 data-t="congrats">Complimenti!</h2><div class="final-time" id="winTime">00:00</div><p id="winDetails"></p><p class="feedback" id="winCompare"></p><button class="btn primary hidden" id="winRanking">Visualizza classifica mondiale</button><button class="btn secondary" id="winShare">🔥 Lancia la sfida!</button><button class="btn secondary" id="winNew" data-t="newGame">Nuova partita</button><button class="text-button" id="winHome" data-t="home">Home</button></div></dialog>
 <dialog id="dailyAlreadyDialog" class="modal"><div class="modal-body win-modal"><div class="confetti-icon">🏆</div><h2 id="dailyAlreadyTitle">Sfida già completata!</h2><p id="dailyAlreadyBody" class="modal-intro"></p><div class="final-time" id="dailyAlreadyTime">—:—</div><button type="button" class="btn primary" id="dailyAlreadyRanking">Visualizza classifica mondiale</button><button type="button" class="btn secondary" id="dailyAlreadyShare">🔥 Lancia la sfida!</button><button type="button" class="text-button" id="dailyAlreadyHome" data-t="home">Home</button></div></dialog>
 <dialog id="dailyInviteDialog" class="modal"><div class="modal-body win-modal"><div class="confetti-icon">🔥</div><h2 id="inviteTitle">Ti hanno lanciato una sfida!</h2><p class="modal-intro" id="inviteBody"></p><div id="iosInviteHandoff" class="hidden"><strong id="iosInviteQuestion"></strong><div class="ios-invite-steps"><div class="ios-step"><span class="ios-step-n">1</span><span id="iosStepOne"></span></div><div class="ios-step"><span class="ios-step-n">2</span><img src="./assets/icon-192.png" width="45" height="45" alt="6 Sudoku" class="ios-app-icon"><span id="iosStepTwo"></span></div><div class="ios-step"><span class="ios-step-n">3</span><span id="iosStepThree"></span></div></div><p class="modal-intro hidden" id="iosInviteHelp"></p><button type="button" class="btn primary" id="iosInviteCopy"></button><p class="profile-help" id="iosInviteNew"></p></div><button type="button" class="btn primary" id="inviteStart">Partecipa alla sfida</button><button type="button" class="btn secondary" id="inviteHome" data-t="inviteBrowserHome">Torna al gioco nel browser</button></div></dialog>

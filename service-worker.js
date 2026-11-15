@@ -1,6 +1,6 @@
-/* 6 Sudoku TEST v0.12.9.5.6 — aggiornamento sicuro e cache offline. */
-const APP_VERSION='0.12.9.5.6';
-const CACHE='6-sudoku-test-v0129-5-6';
+/* 6 Sudoku TEST v0.12.9.5.7 — aggiornamento sicuro e cache offline. */
+const APP_VERSION='0.12.9.5.7';
+const CACHE='6-sudoku-test-v0129-5-7';
 const FILES=['./','./index.html','./manifest.webmanifest','./css/style.css','./js/sudoku.js','./js/languages.js','./js/app.js','./js/supabase-config.js','./js/supabase-profile.js','./js/push.js','./js/daily-reminder.js','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png'];
 const SCOPE=new URL(self.registration.scope);
 self.addEventListener('install',event=>{
