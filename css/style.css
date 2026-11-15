@@ -156,3 +156,17 @@
 .cell{-webkit-appearance:none;appearance:none;border-radius:0}
 .vs1-notify-help{font-size:11px;line-height:1.5;color:var(--muted);margin:-9px 0 8px 0}
 .vs1-notify-feedback{font-size:11px;line-height:1.5;color:var(--darkgreen);min-height:0;margin:0 0 6px}
+
+/* 6 Sudoku TEST v0.12.9.5.7 — profilo a due passaggi e stati servizi leggibili. */
+.home-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:stretch}
+.home-links .text-button{width:100%;min-height:40px;white-space:normal;text-align:center;padding:7px 5px}
+.profile-continue{width:100%;margin:10px 0 4px}
+.profile-next-step{margin:12px 0 0;padding:12px 0 0;border-top:2px solid #a4bba8}
+.profile-next-step.hidden{display:none!important}
+.profile-next-step>.profile-section:first-of-type{margin-top:10px;border-top:0;padding-top:4px}
+#profileDoneBtn{width:100%;margin-top:18px}
+.profile-status{display:block;background:#edf3eb;color:#213d2a;font-size:.87rem;font-weight:700;line-height:1.5;border:1px solid #9cb59f;border-left:4px solid #477953;border-radius:9px;padding:10px 11px;margin:10px 0;overflow-wrap:anywhere}
+.profile-status:empty{display:none}
+.profile-status[data-state="loading"]{color:#40300c;background:#fff0c5;border-color:#d9b45d;border-left-color:#a87500}
+.profile-status[data-state="error"],.profile-status[data-state="warning"]{color:#70291e;background:#fff0e9;border-color:#d8a69a;border-left-color:#b44332}
+#dailyReminderStatus,#pushStatus,#emailProtectionStatus{color:#243e2c;font-size:.82rem;font-weight:650}
