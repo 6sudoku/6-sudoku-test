@@ -170,3 +170,21 @@
 .profile-status[data-state="loading"]{color:#40300c;background:#fff0c5;border-color:#d9b45d;border-left-color:#a87500}
 .profile-status[data-state="error"],.profile-status[data-state="warning"]{color:#70291e;background:#fff0e9;border-color:#d8a69a;border-left-color:#b44332}
 #dailyReminderStatus,#pushStatus,#emailProtectionStatus{color:#243e2c;font-size:.82rem;font-weight:650}
+
+
+/* Solo Home TEST: due testimonial illustrati, accessibili e leggeri */
+.testimonial-stage{position:relative;isolation:isolate;display:flex;align-items:end;justify-content:center;width:100%;height:230px;margin:12px auto 18px;overflow:hidden}
+.testimonial-stage .preview{position:relative;z-index:2;flex:0 0 178px;margin:0 0 4px;box-shadow:0 10px 25px #334d3614}
+.testimonial-person{position:absolute;z-index:1;bottom:0;width:clamp(128px,36vw,170px);height:auto;max-height:218px;object-fit:contain;pointer-events:none;will-change:transform;transform-origin:center bottom}
+.testimonial-man{left:-9px;animation:man-hello 1.2s ease-out both}
+.testimonial-woman{right:-10px;animation:woman-cheers 1.3s .25s ease-out both}
+.testimonial-steam{position:absolute;right:12%;top:13px;color:#c9a17b;opacity:0;font-size:22px;pointer-events:none;animation:steam-up 2.8s 1.8s ease-in-out 2}
+@keyframes man-hello{0%{opacity:0;transform:translateX(-15px) rotate(-5deg)}55%{opacity:1;transform:translateX(0) rotate(2deg)}100%{opacity:1;transform:rotate(0)}}
+@keyframes woman-cheers{0%{opacity:0;transform:translateX(15px) rotate(5deg)}55%{opacity:1;transform:translateX(0) rotate(-2deg)}100%{opacity:1;transform:rotate(0)}}
+@keyframes steam-up{0%,100%{transform:translateY(8px);opacity:0}40%{opacity:.65}80%{transform:translateY(-13px);opacity:0}}
+.testimonial-stage.testimonial-in-view .testimonial-man{animation:man-greeting .9s ease-in-out 1}
+.testimonial-stage.testimonial-in-view .testimonial-woman{animation:woman-greeting 1s ease-in-out 1}
+@keyframes man-greeting{0%,100%{transform:rotate(0)}40%{transform:rotate(-3deg)}70%{transform:rotate(2deg)}}
+@keyframes woman-greeting{0%,100%{transform:rotate(0)}45%{transform:rotate(3deg)}}
+@media(max-width:375px){.testimonial-stage{height:196px}.testimonial-stage .preview{flex-basis:162px;padding:9px}.testimonial-person{width:139px;max-height:195px}.testimonial-man{left:-19px}.testimonial-woman{right:-20px}.testimonial-steam{display:none}}
+@media(prefers-reduced-motion:reduce){.testimonial-person,.testimonial-steam,.testimonial-stage.testimonial-in-view .testimonial-person{animation:none!important;transform:none!important;opacity:1}.testimonial-steam{display:none}}
