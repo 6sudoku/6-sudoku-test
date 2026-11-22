@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id), E=window.SudokuEngine;
-const APP_VERSION='0.12.9.5.7', VERSION_URL='./version.json';
+const APP_VERSION='0.12.9.5.8', VERSION_URL='./version.json';
 const STORE='6sudoku-test-v012-state', LANGKEY='6sudoku-test-lang', PROFILEKEY='6sudoku-test-profile';
 const LEVELS=['beginner','intermediate','advanced','hero'];
 const LEVEL_LABELS={beginner:'🌱 ZEN',intermediate:'⚡ FOCUS',advanced:'💪 MASTER',hero:'👑 HERO'};
@@ -802,4 +802,25 @@ if(new URLSearchParams(location.search).get('vs1')==='result'){
 }
 initPullRefresh();watchServiceWorker();}
 init();
+})();
+
+
+/* Illustrazioni Home TEST: lieve saluto allo scorrimento, una sola volta. */
+(() => {
+  const start = () => {
+    const scene=document.querySelector('#home .testimonial-stage');
+    if(!scene || !('IntersectionObserver' in window))return;
+    let seen=false;
+    const observer=new IntersectionObserver(entries=>{
+      for(const entry of entries){
+        if(entry.isIntersecting && !seen){
+          seen=true;
+          scene.classList.add('testimonial-in-view');
+          observer.disconnect();
+        }
+      }
+    },{threshold:.4});
+    observer.observe(scene);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
