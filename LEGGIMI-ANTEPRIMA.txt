@@ -1,0 +1,16 @@
+6 SUDOKU — TEST HOME TESTIMONIAL ANIMATI (v0.12.9.5.9)
+
+DEMO visuale autonoma: apri ANTEPRIMA-ANIMAZIONE.html in Chrome.
+
+Per TEST GitHub: pubblica SOLO i file:
+ index.html (root)
+ service-worker.js (root)
+ version.json (root)
+ js/app.js
+ css/style.css
+ assets/ragazzo-smartphone.webp
+ assets/ragazza-caffe.webp
+
+PROD: non modificare. Nessuna modifica a Supabase, push o gioco.
+Le immagini animate sono pose complete: i piccoli movimenti oscillano l'intero personaggio.
+Per animare solo mano e smartphone/tazzina serviranno livelli grafici separati.
